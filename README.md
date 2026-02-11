@@ -9,40 +9,66 @@ Two variants per platform:
 
 ## Quick Start
 
-### Using as Claude Code Skills
+### Install
 
-Install a skill by copying its folder to your Claude Code skills directory:
+Copy the skill(s) you want to your Claude Code skills directory:
 
 ```bash
-# iOS Full Pipeline (production apps, teams, configurable stages)
+# Global install (available in all projects)
 cp -r skills/ios-full ~/.claude/skills/ios-full-pipeline
-
-# iOS Lite Pipeline (side projects, MVPs, hackathons)
 cp -r skills/ios-lite ~/.claude/skills/ios-lite-pipeline
-
-# Android Full Pipeline (production apps, teams, configurable stages)
 cp -r skills/android-full ~/.claude/skills/android-full-pipeline
-
-# Android Lite Pipeline (side projects, MVPs, hackathons)
 cp -r skills/android-lite ~/.claude/skills/android-lite-pipeline
+
+# Project-level install (available only in this project)
+mkdir -p .claude/skills
+cp -r skills/ios-full .claude/skills/ios-full-pipeline
 ```
 
-Then use naturally in Claude Code:
+### Starting a Specific Pipeline
+
+**Explicit invocation** (recommended) — name the pipeline you want:
+
 ```
-"Add a user profile screen with avatar and settings" → triggers ios-full or android-full
-"Build me a simple timer app" → triggers ios-lite or android-lite
+"Use the ios-full-pipeline to add a user profile screen"
+"Run ios-lite-pipeline — build me a timer app"
+"Start android-full-pipeline for this sprint's tickets"
 ```
 
-### Which Skill Should I Use?
+**Slash command** — if you set up a Claude Code command alias:
 
-| Situation | Skill |
-|-----------|-------|
-| Production iOS app, team, need deploy | `ios-full-pipeline` |
-| Side project, MVP, hackathon (iOS) | `ios-lite-pipeline` |
-| Production Android app, team, need deploy | `android-full-pipeline` |
-| Side project, MVP, hackathon (Android) | `android-lite-pipeline` |
+```
+/ios-full Add dark mode toggle to settings
+/android-lite Build a simple counter app
+```
 
-**Full vs Lite decision**: Use Full if you need any of: configurable stages, pipeline memory (cross-run learning), MCP integration, sprint batch execution, 9-path routing. Use Lite if you want zero config and just want to start building.
+**Implicit trigger** — if only one skill is installed for a platform, any iOS/Android prompt triggers it automatically. If both Full and Lite are installed, Claude matches based on trigger keywords in the frontmatter description, but this can be ambiguous. Explicit invocation avoids mismatches.
+
+### Making a Pipeline the Default
+
+**Option A: Install only one per platform.** If you only install `ios-full-pipeline` (not lite), then every iOS prompt automatically uses the full pipeline. This is the simplest approach.
+
+**Option B: Project-level install.** Put the skill in `.claude/skills/` inside the project root. Project-level skills override global ones — so a production repo can default to Full while your side-project repo defaults to Lite.
+
+**Option C: CLAUDE.md instruction.** Add to your project's `CLAUDE.md`:
+```
+When I ask you to build iOS features, always use the ios-full-pipeline skill.
+```
+
+### Which Pipeline Do I Need?
+
+Full vs Lite is about your **process needs**, not the task's complexity. A "simple timer app" might need the Full pipeline (if you want tests, deploy, memory). A "complex auth flow" might use Lite (if you're prototyping and just want code fast).
+
+| I need... | Use |
+|-----------|-----|
+| Configurable stages (skip tests, skip deploy) | Full |
+| Pipeline Memory (learn across runs) | Full |
+| MCP integration (Jira, Figma, GitHub) | Full |
+| Sprint batch execution (parallel tasks) | Full |
+| Smart routing (bugs vs features vs refactors) | Full |
+| Zero config — just start coding | Lite |
+| No deploy, no memory, no bootstrap | Lite |
+| Fastest path from idea to PR | Lite |
 
 ## Architecture Diagrams
 

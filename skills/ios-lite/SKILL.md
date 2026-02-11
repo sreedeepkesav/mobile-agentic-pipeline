@@ -5,8 +5,9 @@ description: >
   No bootstrap, no config files, no pipeline memory. Just describe what
   you want, approve the spec, and get clean Swift/SwiftUI code following
   MVVM-C + Clean Architecture. Perfect for side projects, learning,
-  MVPs, and hackathons. Triggers: quick iOS app, simple iOS feature,
-  lite iOS pipeline, indie iOS dev, iOS prototype.
+  MVPs, and hackathons.
+  Invoke explicitly: "use ios-lite-pipeline", "run ios-lite-pipeline", "start ios-lite-pipeline".
+  Also triggers on: quick iOS app, simple iOS feature, lite iOS pipeline, indie iOS dev, iOS prototype.
   Not for: production apps needing configurable stages or cross-run learning —
   use ios-full-pipeline instead.
 ---

@@ -8,7 +8,8 @@ description: >
   Clean Architecture Swift/SwiftUI. Pipeline Memory learns across runs.
   Use when building production iOS apps, working in teams, or when you need
   configurable test/lint/build/deploy stages and cross-run learning.
-  Triggers: iOS feature, iOS bug fix, iOS app, Swift pipeline, full iOS pipeline.
+  Invoke explicitly: "use ios-full-pipeline", "run ios-full-pipeline", "start ios-full-pipeline".
+  Also triggers on: iOS feature, iOS bug fix, iOS app, Swift pipeline, full iOS pipeline.
   Not for: quick prototypes or zero-config needs — use ios-lite-pipeline instead.
 ---
 

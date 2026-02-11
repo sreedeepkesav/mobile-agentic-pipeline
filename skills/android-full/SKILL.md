@@ -8,8 +8,9 @@ description: >
   Clean Architecture Kotlin/Jetpack Compose with Hilt DI. Pipeline Memory
   learns across runs. Use when building production Android apps, working in
   teams, or when you need configurable test/lint/build/deploy stages and
-  cross-run learning. Triggers: Android feature, Android bug fix, Android app,
-  Kotlin pipeline, full Android pipeline.
+  cross-run learning.
+  Invoke explicitly: "use android-full-pipeline", "run android-full-pipeline", "start android-full-pipeline".
+  Also triggers on: Android feature, Android bug fix, Android app, Kotlin pipeline, full Android pipeline.
   Not for: quick prototypes or zero-config needs — use android-lite-pipeline instead.
 ---
 

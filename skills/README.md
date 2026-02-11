@@ -16,22 +16,63 @@ Four self-contained skills for AI-assisted iOS and Android development. Each ski
 Copy the skill folder to your Claude Code skills directory:
 
 ```bash
-# Pick the one(s) you need:
+# Global (all projects):
 cp -r ios-full ~/.claude/skills/ios-full-pipeline
 cp -r ios-lite ~/.claude/skills/ios-lite-pipeline
 cp -r android-full ~/.claude/skills/android-full-pipeline
 cp -r android-lite ~/.claude/skills/android-lite-pipeline
+
+# Project-level (this project only — overrides global):
+mkdir -p .claude/skills
+cp -r ios-full .claude/skills/ios-full-pipeline
 ```
 
-## How Skills Work
+## How to Start a Pipeline
 
-### Triggering
+### Explicit Invocation (Recommended)
 
-Claude Code reads the `description` field in each SKILL.md's YAML frontmatter to decide when to activate a skill. Natural language prompts trigger the right skill automatically:
+Name the pipeline you want in your prompt:
 
-- "Add a login screen to my iOS app" → `ios-full-pipeline`
-- "Quick Android prototype for a timer" → `android-lite-pipeline`
-- "Fix the crash in the settings screen" → routes through coordinator (Full) or coder (Lite)
+```
+"Use ios-full-pipeline to add a user profile screen"
+"Run ios-lite-pipeline — build me a timer app"
+"Start android-full-pipeline for these 3 tickets"
+"android-lite-pipeline: simple counter app with Material Design"
+```
+
+This is the most reliable method. Full vs Lite is about your **process needs** (do you want memory, config, deploy?), not the task's complexity. A timer app might need Full pipeline if you want tests and deploy. A complex feature might use Lite if you're prototyping fast.
+
+### Slash Commands
+
+Set up command aliases in your Claude Code configuration to invoke skills with shorthand:
+
+```
+/ios-full Add dark mode to settings
+/ios-lite Quick prototype for onboarding flow
+/android-full Sprint batch: 4 tickets from Jira
+/android-lite Build a notes app from scratch
+```
+
+### Implicit Triggering
+
+Claude Code reads the `description` field in each SKILL.md's frontmatter. If a prompt matches trigger keywords, the skill activates automatically. However, if both Full and Lite are installed for the same platform, Claude may pick the wrong one based on keyword heuristics.
+
+**To avoid ambiguity**: either install only one pipeline per platform, or always name the pipeline explicitly.
+
+### Making a Pipeline the Default
+
+Three approaches, from simplest to most flexible:
+
+**Install only one per platform.** If only `ios-full-pipeline` is installed, every iOS prompt uses it. No ambiguity.
+
+**Use project-level skills.** Put the skill in `.claude/skills/` inside the project root. A production repo defaults to Full; a side-project repo defaults to Lite. Project-level overrides global.
+
+**Add a CLAUDE.md instruction.** In your project's `CLAUDE.md`:
+```markdown
+When building iOS features, always use the ios-full-pipeline skill.
+When building Android features, always use the android-full-pipeline skill.
+```
+This makes the instruction persistent across all prompts in the project.
 
 ### Progressive Disclosure
 

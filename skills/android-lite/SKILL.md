@@ -8,6 +8,7 @@ description: >
   projects, learning, MVPs, and hackathons. Triggers: quick Android app,
   simple Android feature, lite Android pipeline, indie Android dev,
   Android prototype, Kotlin app.
+  Invoke explicitly: "use android-lite-pipeline", "run android-lite-pipeline", "start android-lite-pipeline".
   Not for: production apps needing configurable stages or cross-run
   learning — use android-full-pipeline instead.
 ---
