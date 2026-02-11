@@ -4,10 +4,10 @@ Four self-contained Claude Code skills for AI-assisted mobile development.
 
 | Skill | Platform | Type | Best For |
 |-------|----------|------|----------|
-| `ios-full` | iOS (Swift/SwiftUI) | Full | Production apps, teams |
-| `ios-lite` | iOS (Swift/SwiftUI) | Lite | Side projects, MVPs |
-| `android-full` | Android (Kotlin/Compose) | Full | Production apps, teams |
-| `android-lite` | Android (Kotlin/Compose) | Lite | Side projects, MVPs |
+| `ios-builder` | iOS (Swift/SwiftUI) | Full | Production apps, teams |
+| `ios-builder-lite` | iOS (Swift/SwiftUI) | Lite | Side projects, MVPs |
+| `android-builder` | Android (Kotlin/Compose) | Full | Production apps, teams |
+| `android-builder-lite` | Android (Kotlin/Compose) | Lite | Side projects, MVPs |
 
 ## Structure
 
@@ -27,14 +27,14 @@ Lite skills have 6 (product-design flow, code gen phases, platform standards, ar
 ## Installation
 
 ```bash
-cp -r ios-full ~/.claude/skills/ios-full-pipeline
+cp -r ios-builder ~/.claude/skills/ios-builder
 ```
 
 For project-level defaults, copy to `.claude/skills/` in the project root instead.
 
 ## Invocation
 
-Name the pipeline explicitly: `"Use ios-full-pipeline to add dark mode"`. See the [usage guide](../docs/usage-guide.md) for all invocation methods, single-agent scenarios, and configuration.
+Name the pipeline explicitly: `"Use ios-builder to add dark mode"`. See the [usage guide](../docs/usage-guide.md) for all invocation methods, single-agent scenarios, and configuration.
 
 ## Contributing
 

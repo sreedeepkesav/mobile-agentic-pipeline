@@ -4,14 +4,16 @@ AI-assisted development pipeline for iOS and Android — from idea to committed 
 
 You describe what you want. The pipeline writes a spec, gets your approval, generates Clean Architecture code, tests it, and opens a PR. Two human checkpoints keep you in control.
 
+**[Usage Guide](docs/usage-guide.md)** — all examples, single-agent scenarios, invocation methods, configuration.
+
 ## Install
 
 ```bash
 # Pick your platform + variant:
-cp -r skills/ios-full ~/.claude/skills/ios-full-pipeline      # iOS, full pipeline
-cp -r skills/ios-lite ~/.claude/skills/ios-lite-pipeline      # iOS, lightweight
-cp -r skills/android-full ~/.claude/skills/android-full-pipeline  # Android, full pipeline
-cp -r skills/android-lite ~/.claude/skills/android-lite-pipeline  # Android, lightweight
+cp -r skills/ios-builder ~/.claude/skills/ios-builder            # iOS
+cp -r skills/ios-builder-lite ~/.claude/skills/ios-builder-lite  # iOS, lightweight
+cp -r skills/android-builder ~/.claude/skills/android-builder            # Android
+cp -r skills/android-builder-lite ~/.claude/skills/android-builder-lite  # Android, lightweight
 ```
 
 ## Use
@@ -19,7 +21,7 @@ cp -r skills/android-lite ~/.claude/skills/android-lite-pipeline  # Android, lig
 Name the pipeline in your prompt:
 
 ```
-Use ios-full-pipeline to add a dark mode toggle in Settings.
+Use ios-builder to add a dark mode toggle in Settings.
 ```
 
 The pipeline runs end-to-end:
@@ -31,9 +33,9 @@ Spec → ⏸ You approve → Code (4-phase team) → Test + Lint → Build → P
 You don't have to run everything. Ask for just the parts you need:
 
 ```
-Use ios-full-pipeline — just spec out the payment flow, no code yet.
-Use android-full-pipeline — run tests only.
-Use ios-full-pipeline — build and ship to TestFlight.
+Use ios-builder — just spec out the payment flow, no code yet.
+Use android-builder — run tests only.
+Use ios-builder — build and ship to TestFlight.
 ```
 
 See the [full usage guide](docs/usage-guide.md) for all scenarios, single-agent usage, invocation methods, and configuration options.
@@ -53,12 +55,12 @@ Both use the same 4-phase Code Gen team and produce the same quality code.
 
 ## Architecture
 
-Interactive diagrams — open in a browser:
+Interactive diagrams — click to view:
 
 | Platform | Full | Lite |
 |----------|------|------|
-| **iOS** (Swift, SwiftUI, MVVM-C) | [View](architecture/ios/full-pipeline.html) | [View](architecture/ios/lite-pipeline.html) |
-| **Android** (Kotlin, Compose, MVVM) | [View](architecture/android/full-pipeline.html) | [View](architecture/android/lite-pipeline.html) |
+| **iOS** (Swift, SwiftUI, MVVM-C) | [View](https://sreedeepkesav.github.io/mobile-agentic-pipeline/ios/full-pipeline.html) | [View](https://sreedeepkesav.github.io/mobile-agentic-pipeline/ios/lite-pipeline.html) |
+| **Android** (Kotlin, Compose, MVVM) | [View](https://sreedeepkesav.github.io/mobile-agentic-pipeline/android/full-pipeline.html) | [View](https://sreedeepkesav.github.io/mobile-agentic-pipeline/android/lite-pipeline.html) |
 
 ## Roadmap
 

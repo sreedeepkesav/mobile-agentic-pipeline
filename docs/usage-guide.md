@@ -5,7 +5,7 @@
 ### New Feature (Full Pipeline)
 
 ```
-You:  Use ios-full-pipeline to add a dark mode toggle in Settings.
+You:  Use ios-builder to add a dark mode toggle in Settings.
 
 1. Bootstrap checks .pipeline.yml (or runs setup on first use)
 2. Coordinator classifies → "New Feature"
@@ -22,7 +22,7 @@ You:  Use ios-full-pipeline to add a dark mode toggle in Settings.
 ### Bug Fix (Full Pipeline)
 
 ```
-You:  Use ios-full-pipeline — fix the crash when tapping Forgot Password offline.
+You:  Use ios-builder — fix the crash when tapping Forgot Password offline.
 
 1. Coordinator classifies → "Bug Fix"
 2. Skips Product Agent (scope is clear)
@@ -34,7 +34,7 @@ You:  Use ios-full-pipeline — fix the crash when tapping Forgot Password offli
 ### Sprint Batch (Full Pipeline)
 
 ```
-You:  Use android-full-pipeline for these 4 tickets:
+You:  Use android-builder for these 4 tickets:
       add dark mode, fix settings crash, notification prefs, refactor networking.
 
 1. Product Agent builds a task dependency graph
@@ -46,7 +46,7 @@ You:  Use android-full-pipeline for these 4 tickets:
 ### Quick Build (Lite Pipeline)
 
 ```
-You:  Use ios-lite-pipeline — recipe app with search and favorites.
+You:  Use ios-builder-lite — recipe app with search and favorites.
 
 1. Product+Design Agent writes spec + design tokens
 2. ⏸ You approve
@@ -57,7 +57,7 @@ You:  Use ios-lite-pipeline — recipe app with search and favorites.
 ### From Scratch (Lite Pipeline)
 
 ```
-You:  Use android-lite-pipeline — Pomodoro timer with Material Design 3.
+You:  Use android-builder-lite — Pomodoro timer with Material Design 3.
 
 1. Spec + design tokens
 2. You approve
@@ -74,7 +74,7 @@ You don't have to run the entire pipeline. Ask for just the agent you need.
 ### Product Agent Only — Spec Without Code
 
 ```
-You:  Use ios-full-pipeline — just run Product Agent to spec out
+You:  Use ios-builder — just run Product Agent to spec out
       a payment flow. Don't write any code yet.
 
 Output:
@@ -90,7 +90,7 @@ Re-run the Product Agent as many times as you want before committing to code.
 ### Architect Only — Plan Without Code
 
 ```
-You:  Use android-full-pipeline — just run the Architect to plan
+You:  Use android-builder — just run the Architect to plan
       the offline sync feature. Write the ADR, don't implement.
 
 Output:
@@ -102,7 +102,7 @@ Output:
 ### Test Only
 
 ```
-You:  Use ios-full-pipeline — run tests only. Report coverage.
+You:  Use ios-builder — run tests only. Report coverage.
 
 Runs unit tests (Domain, Data, Presentation) and UI tests.
 Reports coverage and failures. No code changes.
@@ -111,7 +111,7 @@ Reports coverage and failures. No code changes.
 ### Lint Only
 
 ```
-You:  Use android-full-pipeline — just lint the codebase.
+You:  Use android-builder — just lint the codebase.
 
 Runs ktlint + detekt. Auto-fixes what it can.
 Reports unfixable violations. Checks layer boundaries.
@@ -120,7 +120,7 @@ Reports unfixable violations. Checks layer boundaries.
 ### Build + Deploy Only
 
 ```
-You:  Use ios-full-pipeline — build and ship to TestFlight.
+You:  Use ios-builder — build and ship to TestFlight.
 
 Build → Deploy (Fastlane → TestFlight) → Git tag.
 Skips Product Agent, Code Gen, Test, Lint.
@@ -129,7 +129,7 @@ Skips Product Agent, Code Gen, Test, Lint.
 ### Git Only
 
 ```
-You:  Use ios-full-pipeline — create a PR for my current changes.
+You:  Use ios-builder — create a PR for my current changes.
 
 Branch → conventional commit → PR. You review and merge.
 ```
@@ -137,7 +137,7 @@ Branch → conventional commit → PR. You review and merge.
 ### Code Gen Only — Skip Product Agent
 
 ```
-You:  Use android-full-pipeline — skip Product Agent, here's my spec:
+You:  Use android-builder — skip Product Agent, here's my spec:
       [paste]. Generate code, test, lint.
 
 Code Gen (4-phase) → Test + Lint → Git PR.
@@ -152,9 +152,9 @@ Code Gen (4-phase) → Test + Lint → Git PR.
 Name the pipeline in your prompt:
 
 ```
-"Use ios-full-pipeline to ..."
-"Run android-lite-pipeline — ..."
-"Start ios-lite-pipeline: ..."
+"Use ios-builder to ..."
+"Run android-builder-lite — ..."
+"Start ios-builder-lite: ..."
 ```
 
 ### Slash Commands
@@ -162,26 +162,26 @@ Name the pipeline in your prompt:
 Set up command aliases for shorthand:
 
 ```
-/ios-full add dark mode to settings
-/android-lite build a counter app
+/ios-builder add dark mode to settings
+/android-builder-lite build a counter app
 ```
 
 ### Making a Pipeline the Default
 
-**Install only one per platform.** If only `ios-full-pipeline` is installed, every iOS prompt uses it automatically.
+**Install only one per platform.** If only `ios-builder` is installed, every iOS prompt uses it automatically.
 
 **Project-level install.** Put the skill in `.claude/skills/` inside the project root. Project-level overrides global.
 
 ```bash
 mkdir -p .claude/skills
-cp -r skills/ios-full .claude/skills/ios-full-pipeline
+cp -r skills/ios-builder .claude/skills/ios-builder
 ```
 
 **CLAUDE.md instruction.** Add to your project's `CLAUDE.md`:
 
 ```markdown
-Always use ios-full-pipeline for iOS development tasks.
-Always use android-full-pipeline for Android development tasks.
+Always use ios-builder for iOS development tasks.
+Always use android-builder for Android development tasks.
 ```
 
 ---
