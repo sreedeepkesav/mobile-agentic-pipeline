@@ -17,13 +17,20 @@ Interactive diagrams — click to view:
 
 ## Install
 
+Install into your **project** so the pipeline learns your codebase — APIs, patterns, conventions, dependencies — and gets smarter with every run.
+
 ```bash
+cd your-project
+mkdir -p .claude/skills
+
 # Pick your platform + variant:
-cp -r skills/ios-builder ~/.claude/skills/ios-builder            # iOS
-cp -r skills/ios-builder-lite ~/.claude/skills/ios-builder-lite  # iOS, lightweight
-cp -r skills/android-builder ~/.claude/skills/android-builder            # Android
-cp -r skills/android-builder-lite ~/.claude/skills/android-builder-lite  # Android, lightweight
+cp -r path/to/skills/ios-builder .claude/skills/ios-builder            # iOS
+cp -r path/to/skills/ios-builder-lite .claude/skills/ios-builder-lite  # iOS, lightweight
+cp -r path/to/skills/android-builder .claude/skills/android-builder            # Android
+cp -r path/to/skills/android-builder-lite .claude/skills/android-builder-lite  # Android, lightweight
 ```
+
+Project-level install is recommended. The Full variants build a **Project Context** — a living snapshot of your APIs, design system, dependencies, and domain model — that persists in `.pipeline/memory/` and compounds across runs. Global install (`~/.claude/skills/`) works but won't retain project-specific context.
 
 ## Use
 
