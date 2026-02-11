@@ -320,6 +320,48 @@ All feedback routes through the Coordinator to the specific agent that can fix i
 
 ---
 
+## Resource Management
+
+All optimization is **internal** — never surface resource decisions to the user. Quality and correctness always come first. The pipeline adapts its depth to match task complexity automatically.
+
+### Adaptive Depth
+
+The Coordinator assesses task complexity and scales pipeline effort accordingly:
+
+**Deep mode** (complex features, new architecture, ambiguous scope): Load all relevant references. Run full Product Agent with research. Architect writes thorough ADR. All quality gates active. Memory queries broad. This is where the pipeline earns its value — don't cut corners.
+
+**Standard mode** (clear feature, established patterns): Load references for active stages only. Query memory for matching patterns and apply them directly. Skip reference files for stages the router skips.
+
+**Light mode** (bug fix with repro, single-file change, test-only): Load only the reference for the active stage. Apply known patterns from memory without re-reading docs. Produce code directly. Minimal PR description.
+
+The user never sees mode selection. Coordinator picks based on task classification and spec clarity.
+
+### Context Loading
+
+- If a stage is skipped by routing, don't load its reference file
+- Query `memory.query()` and `context.*()` before falling back to full reference files — if memory has the answer, the reference is redundant
+- On subsequent runs, Project Context replaces most reference lookups — the pipeline already knows the project's patterns, APIs, and conventions
+
+### Output Calibration
+
+Agents scale output to match what the task actually needs:
+
+- A 3-entity feature gets a thorough ADR. A one-line bug fix gets a commit message.
+- Reuse components from `context.components()` — don't recreate what exists
+- If memory has an exact matching pattern, apply it without re-explaining
+- Quality gates report results proportionally: full coverage report for a new module, one-line summary for a passing re-run
+- Memory entries capture the useful signal, not exhaustive logs
+
+### Compounding Efficiency
+
+The pipeline gets cheaper over time without losing quality:
+
+- **Run 1**: Cold start. Full reference loading, thorough exploration.
+- **Run 3**: Project Context populated. Agents skip reference files, query context directly.
+- **Run 5+**: Established patterns. Most decisions already in memory. Agents apply patterns, generate code, move on. Deep mode only activates for genuinely novel architecture decisions.
+
+---
+
 ## Troubleshooting
 
 **Pipeline won't start**: Check `.pipeline.yml` exists. Run `--reconfigure` to re-bootstrap.
