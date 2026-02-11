@@ -1,0 +1,165 @@
+{
+  "evals": [
+    {
+      "id": "eval-001",
+      "name": "Quick Feature: Favorites Button",
+      "description": "Add a favorites button to an existing recipe list screen. Tests integration of new UI element with ViewModel state management.",
+      "category": "feature-extension",
+      "complexity": "easy",
+      "estimated_duration_minutes": 60,
+      "trigger": "lite Android pipeline, add favorites button",
+      "scenario": {
+        "context": "An existing recipe app has a RecipeListScreen showing a list of recipes. Each recipe card displays the recipe name, cuisine, and rating. There is no favorites feature yet.",
+        "request": "Add a favorites button (heart icon) to each recipe card. When clicked, it should toggle the favorite status. The favorite status should persist locally using Room database. Add a visual indicator (filled vs. outlined heart) to show the current favorite status.",
+        "acceptance_criteria": [
+          "Heart icon appears on each recipe card",
+          "Clicking heart toggles favorite status with visual feedback",
+          "Favorite status persists across app sessions (Room database)",
+          "Heart icon is filled (red) when favorited, outlined when not",
+          "No network calls required for favorites toggle",
+          "Error handling for database failures shows a snackbar"
+        ]
+      },
+      "expected_phases": {
+        "product_design": "Update spec with AC, add edge cases for offline favorite toggling",
+        "architect": "Decide if favorites are stored in separate table or Recipe entity, plan ViewModel updates",
+        "domain": "Add Favorite entity, AddFavoriteUseCase, RemoveFavoriteUseCase, FavoriteRepository interface",
+        "data": "Implement FavoriteRepository with Room DAO, add FavoriteEntity with recipe FK, create mappers",
+        "presentation": "Add FavoriteUiState, update RecipeListViewModel, modify RecipeCard with heart button and click handler",
+        "integration": "Wire FavoriteRepository in Hilt, add ktlint/detekt checks, verify no layer boundary violations",
+        "build": "Ensure ./gradlew assembleDebug succeeds",
+        "git": "Create PR with conventional commits"
+      },
+      "success_criteria": [
+        "All 4 code-gen phases complete without errors",
+        "Build succeeds (./gradlew assembleDebug)",
+        "ktlint and detekt pass without violations",
+        "PR created with clear commit history and description",
+        "No console errors or warnings in logcat",
+        "UI renders without compose crashes"
+      ],
+      "potential_pitfalls": [
+        "Forgetting to add FavoriteEntity to Room @Database",
+        "Missing Hilt @Binds for FavoriteRepository",
+        "Not updating ViewModel to collect Flow<Boolean> for favorite status",
+        "Forgetting to add click handler to heart button",
+        "Not debouncing rapid favorite toggles (could cause DB thrashing)"
+      ],
+      "reference_docs": [
+        "code-gen-phases.md#phase-3-presentation-lead",
+        "android-standards.md#room-database",
+        "android-standards.md#state-management-stateflow--uistate",
+        "feedback-loops.md#loop-1-build-failure-recovery"
+      ]
+    },
+    {
+      "id": "eval-002",
+      "name": "New App: Simple Counter with Clean Architecture",
+      "description": "Build a complete counter app from scratch with increment, decrement, reset buttons. Tests end-to-end pipeline from spec to PR.",
+      "category": "new-app",
+      "complexity": "medium",
+      "estimated_duration_minutes": 240,
+      "trigger": "lite Android pipeline, build counter app",
+      "scenario": {
+        "context": "Creating a brand-new Android app with minimal scope: a simple counter application.",
+        "request": "Build a counter app with the following features:\n1. Display current counter value (large, centered text)\n2. Increment button (+ icon) - adds 1\n3. Decrement button (- icon) - subtracts 1\n4. Reset button (circular refresh icon) - sets to 0\n5. Counter starts at 0\n6. Counter never goes below 0\n7. Use Material Design 3 with a primary color theme\n8. Display is reactive - updates immediately when buttons are clicked",
+        "acceptance_criteria": [
+          "Counter displays as large centered text",
+          "Increment button adds 1 to counter",
+          "Decrement button subtracts 1 (but minimum is 0)",
+          "Reset button sets counter to 0",
+          "All buttons have Material Design 3 styling",
+          "App follows MVVM + Clean Architecture",
+          "Hilt DI configured",
+          "Navigation Compose (single screen)",
+          "No network calls (fully local)",
+          "Unit tests for counter logic",
+          "Compose preview for UI"
+        ]
+      },
+      "expected_phases": {
+        "product_design": "Simple spec with AC, single screen design, no API needed",
+        "architect": "Single-screen app, basic Hilt setup, no complex modules needed",
+        "domain": "CounterUseCase with increment/decrement/reset suspend functions, no data dependencies",
+        "data": "Optional local storage with SharedPreferences or DataStore for persistence",
+        "presentation": "CounterViewModel with CounterUiState (Loading, Success with value), CounterScreen, buttons",
+        "integration": "Hilt setup, NavHost with single route, ktlint/detekt",
+        "build": "Full APK build",
+        "git": "PR with complete implementation"
+      },
+      "success_criteria": [
+        "Product + Design produces clear spec approved by user",
+        "Architect completes ADR",
+        "Domain layer has pure Kotlin use cases (no Android imports)",
+        "Data layer (if used) properly implements persistence",
+        "Presentation has UiState sealed class + ViewModel + Screen",
+        "All phases complete without errors",
+        "Build succeeds without warnings",
+        "ktlint and detekt pass",
+        "Unit tests exist and pass",
+        "Compose preview renders without errors",
+        "APK is executable (verified with ./gradlew assembleDebug)",
+        "PR has clear, conventional commits"
+      ],
+      "potential_pitfalls": [
+        "Domain attempting to import Android (even for SharedPreferences)",
+        "Presentation directly holding counter Int instead of via ViewModel state",
+        "Forgot to add @HiltViewModel annotation",
+        "Buttons not connected to ViewModel event handlers",
+        "No handling of counter minimum (allows negative values)",
+        "Compose recomposition issues due to non-stable parameter types"
+      ],
+      "reference_docs": [
+        "SKILL.md#overview",
+        "product-design-flow.md",
+        "code-gen-phases.md",
+        "android-standards.md",
+        "android-architecture-template.md",
+        "build-and-git.md"
+      ]
+    },
+    {
+      "id": "eval-003",
+      "name": "Feedback Loop: Build Failure & Hilt Wiring Fix",
+      "description": "Intentionally create a Hilt wiring issue, trigger build failure, verify feedback loop automatically fixes it.",
+      "category": "feedback-loop",
+      "complexity": "easy",
+      "estimated_duration_minutes": 30,
+      "trigger": "lite Android pipeline, test hilt feedback loop",
+      "scenario": {
+        "context": "After Phase 3 (Presentation Lead) completes, the Integration phase runs Phase 4 tasks. A ViewModel tries to inject a use case that hasn't been provided in any Hilt module.",
+        "issue": "RecipeListViewModel @Inject constructor receives GetRecipesUseCase, but GetRecipesUseCase is not bound or provided in any Hilt @Module. This causes a Dagger/MissingBinding error during compilation.",
+        "trigger_error": "error: [Dagger/MissingBinding] com.example.feature.recipe.domain.usecase.GetRecipesUseCase cannot be provided without an @Provides-annotated method.",
+        "expected_behavior": "Loop 1 (Build Failure Recovery) detects the error, identifies that GetRecipesUseCase is missing from Hilt modules, and automatically adds a @Provides method or @Binds binding to di/UseCaseModule.kt or di/RepositoryModule.kt."
+      },
+      "test_steps": [
+        "Run Phase 1-3 to completion (Product + Design, Architect, Domain, Data, Presentation)",
+        "Intentionally omit GetRecipesUseCase from Hilt modules in Phase 4",
+        "Run Build: ./gradlew assembleDebug",
+        "Observe: Build fails with MissingBinding error",
+        "Loop 1 triggers: AI detects error",
+        "AI adds @Provides or @Binds: @Provides fun provideGetRecipesUseCase(...): GetRecipesUseCase",
+        "Retry Build: ./gradlew clean && ./gradlew assembleDebug",
+        "Expected: BUILD SUCCESSFUL"
+      ],
+      "success_criteria": [
+        "Build fails with clear [Dagger/MissingBinding] error on first attempt",
+        "Loop 1 detects the error and roots cause (missing GetRecipesUseCase)",
+        "AI automatically adds @Provides or @Binds to provide the use case",
+        "Code change is syntactically correct (no new errors)",
+        "Retry build succeeds",
+        "Total cycles: 2 (first fail, second success)"
+      ],
+      "potential_pitfalls": [
+        "AI might over-fix by creating incorrect @Provides signature",
+        "AI might miss that the issue is actually in RecipeRepository binding (not directly the use case)",
+        "Loop might exceed 2 retry attempts and escalate unnecessarily"
+      ],
+      "reference_docs": [
+        "feedback-loops.md#loop-1-build-failure-recovery",
+        "android-architecture-template.md#di-repositorymodulekt",
+        "android-standards.md#dependency-injection-hilt"
+      ]
+    }
+  ]
+}

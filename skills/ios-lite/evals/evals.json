@@ -1,0 +1,280 @@
+{
+  "skill_name": "ios-lite-pipeline",
+  "version": "1.0.0",
+  "description": "Lightweight iOS development pipeline: Product+Design → Review Gate → Coder (4-phase) → Build → Git → Human Merge",
+  "evals": [
+    {
+      "id": "ios-lite-quick-feature",
+      "title": "Add Pull-to-Refresh Feature",
+      "prompt": "Add a pull-to-refresh feature to the timer list screen. Users should see a loading spinner when pulling down, and the list updates when data arrives.",
+      "expected_flow": "Product+Design specs the feature → Review Gate → Coder (4-phase) → Build → Git PR",
+      "expectations": [
+        "Product+Design creates spec.md with acceptance criteria (pull gesture, loading spinner, list updates)",
+        "Product+Design creates screens.md with timer list wireframe and pull-to-refresh interaction",
+        "Product+Design creates design-tokens.json with spinner color and refresh indicator style",
+        "Pipeline pauses at Review Gate 1 for user approval",
+        "Coder Architect writes ADR explaining pull-to-refresh integration with existing timer list",
+        "Coder Domain Lead implements RefreshTimerListUseCase protocol",
+        "Coder Data Lead implements pull-to-refresh API call in APIClient",
+        "Coder Presentation Lead adds refreshable() modifier to TimerListView and updates ViewModel with refresh state",
+        "Coder Integration wires refresh use case in DI container, runs SwiftLint, SwiftFormat",
+        "Build compiles successfully with xcodebuild",
+        "Git creates feature/pull-to-refresh-timer-list branch with conventional commits",
+        "Git opens PR with summary, file list, acceptance criteria checklist",
+        "Pipeline pauses at Review Gate 2 waiting for human merge"
+      ],
+      "success_criteria": [
+        "Feature spec includes refresh spinner visibility duration",
+        "Screens.md shows pull gesture starting at top of list",
+        "All 4 coder phases complete successfully",
+        "No build errors or warnings",
+        "No SwiftLint violations",
+        "PR has 3-4 logically grouped conventional commits",
+        "PR diff shows Domain/Data/Presentation files properly organized"
+      ]
+    },
+    {
+      "id": "ios-lite-new-app",
+      "title": "Build Complete Timer App from Scratch",
+      "prompt": "I want to build a simple timer app. Users should be able to create timers with a name and duration, see a list of timers, tap to view details, and start/pause/reset/delete individual timers. Clean SwiftUI UI.",
+      "expected_flow": "Full lite pipeline from idea to PR",
+      "expectations": [
+        "Product+Design researches timer UX patterns (how iOS timer app works, pull-to-refresh, etc.)",
+        "Product+Design plans feature spec with screens: Timer List, Timer Detail, Create Timer",
+        "Product+Design designs UI wireframes for all 3 screens with layout and buttons",
+        "Product+Design defines design tokens (Apple Blue primary, light gray background, 16pt spacing)",
+        "Product+Design documents edge cases (loading state, empty state when no timers, error state on network fail, offline with cached data)",
+        "Coder Architect writes ADR deciding: MVVM-C with NavigationPath, clean architecture 3-layer, manual DI",
+        "Coder Domain Lead creates Timer entity, GetTimersUseCase, CreateTimerUseCase, StartTimerUseCase, PauseTimerUseCase, ResetTimerUseCase, DeleteTimerUseCase",
+        "Coder Domain Lead defines TimerRepository protocol and DomainError enum",
+        "Coder Data Lead creates TimerDTO matching API response, TimerMapper (DTO ↔ Entity), APIClient with network calls",
+        "Coder Data Lead implements DefaultTimerRepository conforming to Domain protocol",
+        "Coder Presentation Lead creates TimerListViewModel with ViewState enum (loading, success, empty, error)",
+        "Coder Presentation Lead creates TimerListView with list rendering, empty state, error state, loading spinner",
+        "Coder Presentation Lead creates TimerDetailViewModel and TimerDetailView with start/pause/reset/delete buttons",
+        "Coder Presentation Lead creates CreateTimerView with name and duration inputs",
+        "Coder Presentation Lead creates TimerCoordinator with NavigationPath for routing between screens",
+        "Coder Integration creates DIContainer.make() wiring all use cases and repositories",
+        "Coder Integration creates main.swift entry point",
+        "Coder Integration runs SwiftLint (expects 0 violations), SwiftFormat",
+        "Coder Integration audits: Domain imports only Foundation, Data imports Domain+Foundation, Presentation imports Domain+SwiftUI",
+        "Build compiles full app with xcodebuild, 0 errors, 0 warnings",
+        "Git creates feature/timer-app branch with commits: feat(domain): create entities and use cases, feat(data): implement API layer, feat(presentation): create views and viewmodels, feat(app): wire DI container",
+        "Git opens PR with acceptance criteria all checked, file structure showing proper layering"
+      ],
+      "success_criteria": [
+        "spec.md clearly describes all 3 screens and feature scope",
+        "screens.md shows navigation flows: List → Detail (tap) and List → Create (+ button)",
+        "design-tokens.json defines at least 5 colors, 4 typography styles, 5 spacing values",
+        "edge-cases.md documents all 4 states: loading, empty, error, offline",
+        "ADR explains MVVM-C choice, NavigationPath routing, clean 3-layer architecture",
+        "Domain layer: 7+ use cases, 1 repository protocol, 1 error enum, 0 framework imports except Foundation",
+        "Data layer: 1 DTO, 1 mapper, 1 API client, 1 repository implementation",
+        "Presentation layer: 4+ views, 3+ viewmodels, 1 coordinator, 1 navigation route enum",
+        "Build succeeds with 0 errors and 0 warnings",
+        "PR has 4+ commits, all conventional (feat:, refactor:)",
+        "File structure matches expected layout (App/, Domain/, Data/, Presentation/)"
+      ]
+    },
+    {
+      "id": "ios-lite-feedback-loop-build",
+      "title": "Handle Build Failure Feedback Loop",
+      "prompt": "The build failed with error: 'Use of undeclared identifier TimeInterval' in Domain/Entities/Timer.swift. Fix it without restarting from the beginning.",
+      "expected_flow": "Build fail → Integration detects → Integration fixes import → Build retries → Success",
+      "expectations": [
+        "Build reports specific error: file path, line number, 'TimeInterval' identifier",
+        "Integration detects: TimeInterval not imported in Domain/Entities/Timer.swift",
+        "Integration adds 'import Foundation' to top of Timer.swift",
+        "Build retries with 'xcodebuild build'",
+        "Build succeeds, no further Integration phase needed",
+        "Git phase proceeds (does not re-run full Coder 4-phase)"
+      ],
+      "success_criteria": [
+        "Only Integration phase re-runs, not Domain/Data/Presentation phases",
+        "Correct import (Foundation) is added",
+        "Build succeeds on retry",
+        "No build error loop (max 3 retries before escalation)"
+      ]
+    },
+    {
+      "id": "ios-lite-feedback-loop-lint",
+      "title": "Auto-Fix SwiftLint Violations",
+      "prompt": "SwiftLint found trailing whitespace and force unwrap violations. Auto-fix what you can, flag what you can't.",
+      "expected_flow": "Lint violation → Integration SwiftFormat → re-lint → Pass auto-fixable, flag non-auto-fixable",
+      "expectations": [
+        "Integration detects: trailing whitespace on line 42 (auto-fixable), force unwrap on line 25 (non-auto-fixable)",
+        "Integration runs SwiftFormat to auto-fix formatting",
+        "SwiftFormat fixes trailing whitespace",
+        "SwiftFormat cannot auto-fix force unwrap (left as-is)",
+        "Integration re-runs SwiftLint",
+        "Lint report shows: trailing whitespace fixed, force unwrap flagged in Integration Audit Log",
+        "Git proceeds with audit log showing 1 non-auto-fixable violation",
+        "User sees force unwrap violation in PR and can decide to approve or request fix"
+      ],
+      "success_criteria": [
+        "Trailing whitespace auto-fixed by SwiftFormat",
+        "Non-auto-fixable violations clearly flagged in audit log",
+        "Build proceeds despite non-auto-fixable violations",
+        "Git phase includes audit log in PR description or comments"
+      ]
+    },
+    {
+      "id": "ios-lite-feedback-loop-layer",
+      "title": "Fix Layer Boundary Violation",
+      "prompt": "Integration audit found that Presentation/ViewModels/TimerListViewModel.swift imports Data layer directly. Fix the boundary violation.",
+      "expected_flow": "Layer violation detected → Integration re-architects → affected code fixed → audit re-runs → Success",
+      "expectations": [
+        "Integration audit detects: Presentation imports Data (violation)",
+        "Integration identifies: ViewModel uses DefaultTimerRepository (Data) directly",
+        "Integration fixes: Changes 'import Data' to 'import Domain'",
+        "Integration fixes: Changes 'repository: DefaultTimerRepository' to 'useCase: GetTimersUseCase'",
+        "Integration fixes: ViewModel calls useCase.execute() instead of repository.fetch()",
+        "Integration re-audits layer separation",
+        "Audit succeeds: Presentation only imports Domain, no Data imports",
+        "Build runs and succeeds"
+      ],
+      "success_criteria": [
+        "No 'import Data' in Presentation layer",
+        "ViewModel uses Domain protocols (UseCase), not Data implementations",
+        "Layer audit passes on retry",
+        "Build succeeds after fix",
+        "Violating import removed completely"
+      ]
+    },
+    {
+      "id": "ios-lite-review-gate-approval",
+      "title": "User Approves Design at Review Gate 1",
+      "prompt": "Review the spec, screens, and design tokens. Approve or request changes. You decide the feature is correct and approve.",
+      "expected_flow": "Product+Design outputs → Review Gate 1 (you see spec, screens, design) → You approve → Coder starts",
+      "expectations": [
+        "Product+Design delivers spec.md with feature description and AC",
+        "Product+Design delivers screens.md with all screen layouts and navigation flows",
+        "Product+Design delivers design-tokens.json with colors, typography, spacing",
+        "Product+Design delivers edge-cases.md documenting all error/loading/empty states",
+        "Pipeline pauses at Review Gate 1 and presents outputs for user review",
+        "User reviews and approves the spec (no edits requested)",
+        "Coder phase starts immediately after approval (Architect → Domain → Data ∥ Pres → Integration)"
+      ],
+      "success_criteria": [
+        "All 4 design outputs present (spec, screens, tokens, edge cases)",
+        "User can review spec and make decision (approve/edit/reject)",
+        "Approval triggers immediate Coder phase start",
+        "No delay between approval and Architect starting"
+      ]
+    },
+    {
+      "id": "ios-lite-review-gate-rejection",
+      "title": "User Rejects Design and Restarts",
+      "prompt": "Review the spec. It's too vague. Reject it and provide clearer guidance, then restart the pipeline.",
+      "expected_flow": "Product+Design outputs → Review Gate 1 → User rejects (too vague) → Reset to idea entry",
+      "expectations": [
+        "Product+Design delivers spec.md that is unclear or incomplete",
+        "User reviews and decides to reject (too vague, missing details, unclear scope)",
+        "Rejection option halts Coder and resets to idea entry",
+        "User provides more detailed idea description with specific requirements",
+        "Product+Design re-runs from scratch with new guidance"
+      ],
+      "success_criteria": [
+        "Rejection stops Coder from starting",
+        "Pipeline resets to idea entry point",
+        "User can provide new/revised idea",
+        "Product+Design re-runs with clearer guidance"
+      ]
+    },
+    {
+      "id": "ios-lite-pr-review-comment",
+      "title": "Handle PR Comment Feedback",
+      "prompt": "User comments on PR: 'Change the error message color from gray to red'. Fix it and amend the commit.",
+      "expected_flow": "PR created → User comments → Coder reads comment → Coder fixes → Build → Git amend → User re-reviews",
+      "expectations": [
+        "PR is created and waiting for user review",
+        "User leaves comment: 'Error message should be red, not gray'",
+        "Coder reads comment and identifies scope: single UI element, Presentation layer",
+        "Coder makes targeted fix: Text(.foregroundColor(.red)) instead of .gray",
+        "Build runs and verifies fix compiles",
+        "Git amends commit with fix: git commit --amend",
+        "PR updates automatically with amended commit",
+        "User re-reviews and approves (or requests more changes)"
+      ],
+      "success_criteria": [
+        "Comment recognized as small, scoped change",
+        "Fix is targeted to single file/component",
+        "Build passes after fix",
+        "Git amend updates PR without creating new commit",
+        "User can re-review amended code"
+      ]
+    },
+    {
+      "id": "ios-lite-spec-clarification",
+      "title": "Architect Pauses for Spec Clarification",
+      "prompt": "Spec says 'pull-to-refresh shows loading' but doesn't specify: is loading state disabled (can't pull again) or can user keep pulling? Pause and ask user.",
+      "expected_flow": "Architect reads spec → finds ambiguity → pauses Coder → asks user → user clarifies → Architect resumes",
+      "expectations": [
+        "Architect phase reads spec and encounters ambiguous requirement",
+        "Architect identifies missing detail: 'Should pull-to-refresh be disabled while loading is happening?'",
+        "Architect pauses Coder phase and creates clarification question",
+        "User is prompted to provide clarification (e.g., 'Disable pull while loading')",
+        "User responds with clear answer",
+        "Architect resumes with clarification incorporated into design decisions",
+        "Coder continues through Domain Lead → Data Lead ∥ Presentation Lead → Integration"
+      ],
+      "success_criteria": [
+        "Clarification question clearly identifies missing detail",
+        "Coder pauses and waits for user response",
+        "User can provide clarification easily",
+        "Architect resumes and incorporates clarification",
+        "No architectural changes after clarification (just clarifies intent)"
+      ]
+    },
+    {
+      "id": "ios-lite-end-to-end",
+      "title": "Complete End-to-End Lite Pipeline",
+      "prompt": "Build a notes app: users create notes with title and body, see a list of notes, tap to edit, delete notes. Full pipeline start to finish.",
+      "expected_flow": "Your idea → Product+Design → Review Gate 1 → Coder (4-phase) → Build → Git → PR → Review Gate 2 → Human merge",
+      "expectations": [
+        "User provides clear idea: 'Notes app with create, list, detail, delete'",
+        "Product+Design researches note-taking patterns, plans feature spec with AC",
+        "Product+Design designs 3 screens: Note List, Note Detail, Create Note",
+        "Product+Design creates design tokens and edge cases (empty, error, loading)",
+        "Pipeline pauses at Review Gate 1",
+        "User reviews and approves spec",
+        "Coder Architect writes ADR, plans 3-layer architecture with MVVM-C",
+        "Coder Domain Lead creates Note entity, GetNotesUseCase, CreateNoteUseCase, etc.",
+        "Coder Data Lead creates NoteDTO, mapper, APIClient, DefaultNoteRepository",
+        "Coder Presentation Lead creates NoteListViewModel/View, NoteDetailViewModel/View, NoteCoordinator",
+        "Coder Integration wires DIContainer, runs lint/format, audits layers",
+        "Build compiles successfully",
+        "Git creates branch, writes 4 conventional commits, opens PR",
+        "PR includes spec summary, file list, AC checklist",
+        "User reviews PR diff, commits, file structure",
+        "User approves and merges PR manually"
+      ],
+      "success_criteria": [
+        "All 4 Product+Design outputs delivered",
+        "All 4 Coder phases complete successfully",
+        "Build succeeds with 0 errors",
+        "Git creates feature branch with conventional commits",
+        "PR is ready for human review and merge",
+        "No major issues requiring feedback loops",
+        "Full pipeline completes in <1 hour of AI work"
+      ]
+    }
+  ],
+  "meta": {
+    "created_date": "2026-02-11",
+    "pipeline_type": "lite",
+    "targets": [
+      "indie developers",
+      "side projects",
+      "hackathons",
+      "MVPs",
+      "learning projects"
+    ],
+    "not_for": [
+      "production apps with complex requirements",
+      "team-based development",
+      "multi-feature coordination",
+      "deploy automation needs"
+    ]
+  }
+}

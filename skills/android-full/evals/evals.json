@@ -1,0 +1,649 @@
+{
+  "version": "1.0.0",
+  "evals": [
+    {
+      "id": "eval_001",
+      "name": "Bootstrap New Android Project",
+      "description": "Verify Bootstrap detects Clean Architecture, Jetpack Compose, Hilt, and creates stage config",
+      "difficulty": "easy",
+      "duration_minutes": 5,
+      "category": "bootstrap",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Run Bootstrap on new Android project",
+          "input": {
+            "project_type": "android",
+            "project_path": "/tmp/test_project",
+            "has_existing_code": false,
+            "architecture": "none"
+          },
+          "expected_output": {
+            "detected_architecture": "none",
+            "scaffold_recommended": true,
+            "stage_config": {
+              "stages": {
+                "scaffold": true,
+                "test": true,
+                "lint": true,
+                "build": true,
+                "deploy": true,
+                "git": true
+              }
+            }
+          }
+        },
+        {
+          "step": 2,
+          "action": "Run Bootstrap on existing Clean Architecture project",
+          "input": {
+            "project_type": "android",
+            "project_path": "/tmp/existing_project",
+            "has_existing_code": true,
+            "existing_structure": ["domain/", "data/", "presentation/"]
+          },
+          "expected_output": {
+            "detected_architecture": "clean",
+            "scaffold_recommended": false,
+            "detected_technologies": ["jetpack-compose", "hilt", "room", "retrofit"],
+            "memory_patterns_loaded": 0
+          }
+        }
+      ],
+      "pass_criteria": [
+        "Architecture detection accurate (none or clean)",
+        "Technologies detected correctly",
+        "Stage config created with sensible defaults",
+        "Scaffold recommended for greenfield, skipped for existing"
+      ],
+      "tags": ["bootstrap", "detection", "architecture"]
+    },
+    {
+      "id": "eval_002",
+      "name": "Feature Request: User Authentication (Full Pipeline)",
+      "description": "Complete feature implementation from Product Agent through Git (auth feature with Material Design 3 UI)",
+      "difficulty": "hard",
+      "duration_minutes": 45,
+      "category": "feature",
+      "setup": {
+        "project": "clean-architecture-android",
+        "initial_state": "bootstrap complete, empty domain/data/presentation"
+      },
+      "steps": [
+        {
+          "step": 1,
+          "action": "Product Agent: Gather auth feature spec",
+          "input": {
+            "request": "Add JWT login with offline caching, forget-me-not token refresh"
+          },
+          "expected_output": {
+            "spec_contains": [
+              "Use cases: LoginUseCase, LogoutUseCase, RefreshTokenUseCase",
+              "Data models: User, AuthToken entities",
+              "API contracts: POST /auth/login",
+              "Material Design 3 mockup with OutlinedTextField, FilledButton",
+              "Navigation: AuthRoute.Login, AuthRoute.Splash",
+              "Error handling: Result<T> pattern"
+            ],
+            "spec_file_created": true
+          }
+        },
+        {
+          "step": 2,
+          "action": "Scaffold: Create folder structure and Hilt modules",
+          "input": {
+            "spec_file": "auth_spec.md"
+          },
+          "expected_output": {
+            "folders_created": [
+              "domain/entity/",
+              "domain/usecase/",
+              "domain/repository/",
+              "data/dto/",
+              "data/network/",
+              "data/local/",
+              "data/repository/",
+              "presentation/feature/login/",
+              "di/"
+            ],
+            "files_created": [
+              "di/AuthModule.kt",
+              "di/NetworkModule.kt",
+              "di/DatabaseModule.kt"
+            ]
+          }
+        },
+        {
+          "step": 3,
+          "action": "Code Gen Phase 1: Architect designs module boundaries",
+          "input": {
+            "spec": "auth_spec.md"
+          },
+          "expected_output": {
+            "blueprint_contains": [
+              "Module diagram showing domain → data separation",
+              "AuthRepository interface (domain layer)",
+              "LoginUseCase interface contract (suspend fun)",
+              "Error handling: Result<T> sealed class",
+              "Hilt module plan: @Binds for AuthRepository"
+            ]
+          }
+        },
+        {
+          "step": 4,
+          "action": "Code Gen Phase 2a: Domain Lead generates pure Kotlin code",
+          "input": {
+            "blueprint": "architecture_blueprint.md"
+          },
+          "expected_output": {
+            "domain_files": [
+              "domain/entity/User.kt (data class, no Android imports)",
+              "domain/entity/AuthToken.kt (data class, no Android imports)",
+              "domain/repository/AuthRepository.kt (interface, suspend fun)",
+              "domain/usecase/LoginUseCase.kt (@Inject, suspend operator fun invoke)",
+              "domain/exception/DomainException.kt (sealed class)"
+            ],
+            "validation": "zero android.* imports in domain/ (detekt check)",
+            "kotlin_coroutines_used": true
+          }
+        },
+        {
+          "step": 5,
+          "action": "Code Gen Phase 2b: Data Lead + Pres Lead (parallel) generate code",
+          "input": {
+            "domain_code": "domain/ files",
+            "spec": "auth_spec.md"
+          },
+          "expected_output": {
+            "data_files": [
+              "data/dto/LoginDto.kt (@Serializable, @SerialName)",
+              "data/network/AuthService.kt (Retrofit interface)",
+              "data/local/AuthDao.kt (Room DAO with Flow)",
+              "data/repository/AuthRepositoryImpl.kt (implements AuthRepository)",
+              "data/mapper/AuthMapper.kt (DTO → Domain conversion)"
+            ],
+            "presentation_files": [
+              "presentation/feature/login/LoginUiState.kt (sealed class: Idle, Loading, Success, Error)",
+              "presentation/feature/login/LoginViewModel.kt (@HiltViewModel, StateFlow)",
+              "presentation/feature/login/LoginScreen.kt (@Composable, Material Design 3)",
+              "presentation/navigation/Route.kt (sealed class AuthRoute.Login)"
+            ]
+          }
+        },
+        {
+          "step": 6,
+          "action": "Code Gen Phase 3: Integration assembles Hilt modules + validates layers",
+          "input": {
+            "all_code": "domain/, data/, presentation/ files"
+          },
+          "expected_output": {
+            "validation_results": {
+              "hilt_bindings_complete": true,
+              "layer_boundaries_valid": true,
+              "android_imports_in_domain": 0,
+              "data_imports_presentation": 0
+            },
+            "compile_check": "success",
+            "ktlint_violations": 0,
+            "detekt_violations": 0
+          }
+        },
+        {
+          "step": 7,
+          "action": "Test Agent: Generate and run tests",
+          "input": {
+            "code": "all layers"
+          },
+          "expected_output": {
+            "tests_generated": [
+              "test/LoginUseCaseTest.kt (domain, MockK)",
+              "test/AuthRepositoryImplTest.kt (data, Retrofit mock)",
+              "test/LoginViewModelTest.kt (presentation, StateFlow assertions)",
+              "androidTest/LoginScreenTest.kt (Compose UI test)"
+            ],
+            "test_results": {
+              "total": 10,
+              "passed": 10,
+              "coverage": {
+                "domain": "80%",
+                "data": "72%",
+                "presentation": "65%"
+              }
+            }
+          }
+        },
+        {
+          "step": 8,
+          "action": "Lint Agent: Run ktlint + detekt",
+          "input": {
+            "code": "all generated files"
+          },
+          "expected_output": {
+            "ktlint_result": "all files formatted",
+            "detekt_result": {
+              "violations": 0,
+              "layer_violations": 0
+            }
+          }
+        },
+        {
+          "step": 9,
+          "action": "Build Agent: Compile and generate APK",
+          "input": {
+            "all_code_and_tests": "passing"
+          },
+          "expected_output": {
+            "compile_result": "success",
+            "apk_generated": "app-debug.apk",
+            "apk_size_mb": 45
+          }
+        },
+        {
+          "step": 10,
+          "action": "Deploy Agent: Deploy to local device",
+          "input": {
+            "apk": "app-debug.apk"
+          },
+          "expected_output": {
+            "deploy_result": "success",
+            "app_installed": true,
+            "app_launched": true
+          }
+        },
+        {
+          "step": 11,
+          "action": "Git Agent: Create PR with descriptive commit",
+          "input": {
+            "all_artifacts": "code, tests, build"
+          },
+          "expected_output": {
+            "branch_created": "feature/user-auth",
+            "commit_message": "feat(auth): add JWT login with offline caching",
+            "pr_created": true,
+            "pr_title_contains": "JWT login",
+            "pr_body_contains": [
+              "Domain layer: LoginUseCase, AuthRepository interface",
+              "Data layer: AuthRepositoryImpl, DTOs, Retrofit, Room",
+              "Presentation: LoginViewModel, LoginScreen, Navigation",
+              "Test coverage: 72%+",
+              "ktlint + detekt: zero violations"
+            ]
+          }
+        }
+      ],
+      "pass_criteria": [
+        "All 11 steps completed successfully",
+        "Auth feature fully implemented (domain + data + presentation)",
+        "Tests: 10/10 passing, coverage 72%+",
+        "Build succeeds, APK generated",
+        "PR created with clear commit message",
+        "PR body documents all changes",
+        "Ready for human review/merge"
+      ],
+      "tags": ["feature", "full-pipeline", "material-design-3", "clean-architecture", "hilt", "jetpack-compose"]
+    },
+    {
+      "id": "eval_003",
+      "name": "Bug Fix Routing: StateFlow Not Updating",
+      "description": "Diagnose and fix presentation layer bug (StateFlow not emitting in Compose screen)",
+      "difficulty": "medium",
+      "duration_minutes": 15,
+      "category": "bug-fix",
+      "setup": {
+        "project": "existing-auth-feature",
+        "bug_scenario": "LoginScreen doesn't update when ViewModel emits new state on device rotation"
+      },
+      "steps": [
+        {
+          "step": 1,
+          "action": "Coordinator: Receive bug report and diagnose layer",
+          "input": {
+            "bug_report": "LoginScreen state not updating on rotation"
+          },
+          "expected_output": {
+            "diagnosis": "presentation layer (ViewModel ↔ Screen)",
+            "route_to": "Pres Lead"
+          }
+        },
+        {
+          "step": 2,
+          "action": "Pres Lead: Identify root cause",
+          "input": {
+            "code": "LoginScreen.kt using viewModel.uiState.collect()"
+          },
+          "expected_output": {
+            "root_cause": "collect() doesn't respect lifecycle, should use collectAsStateWithLifecycle()",
+            "fix": "Change .collect() to .collectAsStateWithLifecycle()"
+          }
+        },
+        {
+          "step": 3,
+          "action": "Apply fix to LoginScreen",
+          "input": {
+            "original": "val uiState by viewModel.uiState.collect().collectAsState()",
+            "fixed": "val uiState by viewModel.uiState.collectAsStateWithLifecycle()"
+          },
+          "expected_output": {
+            "file_modified": "presentation/feature/login/LoginScreen.kt",
+            "lines_changed": 1
+          }
+        },
+        {
+          "step": 4,
+          "action": "Test Agent: Run LoginScreenTest to verify fix",
+          "input": {
+            "test": "LoginScreenTest::testStateUpdateOnRotation"
+          },
+          "expected_output": {
+            "test_result": "PASSED",
+            "behavior": "State persists correctly on rotation"
+          }
+        },
+        {
+          "step": 5,
+          "action": "Lint Agent: Check modified file",
+          "input": {
+            "modified_files": ["LoginScreen.kt"]
+          },
+          "expected_output": {
+            "ktlint_violations": 0,
+            "detekt_violations": 0
+          }
+        },
+        {
+          "step": 6,
+          "action": "Build Agent: Compile and test",
+          "input": {
+            "code": "fixed LoginScreen.kt"
+          },
+          "expected_output": {
+            "compile_result": "success",
+            "test_result": "all passing"
+          }
+        },
+        {
+          "step": 7,
+          "action": "Git Agent: Commit fix and create PR",
+          "input": {
+            "fix_commit": "fix(login): fix StateFlow not emitting on screen rotation"
+          },
+          "expected_output": {
+            "pr_created": true,
+            "pr_branch": "bugfix/state-rotation",
+            "pr_title": "fix(login): fix StateFlow not emitting on screen rotation"
+          }
+        }
+      ],
+      "pass_criteria": [
+        "Bug correctly diagnosed as presentation layer issue",
+        "Root cause identified (collect vs collectAsStateWithLifecycle)",
+        "Fix applied: one-line change to LoginScreen",
+        "Test verifies fix works",
+        "Build + tests pass",
+        "PR created with descriptive message"
+      ],
+      "tags": ["bug-fix", "presentation-layer", "stateflow", "lifecycle"]
+    },
+    {
+      "id": "eval_004",
+      "name": "Sprint Batch: Parallel Feature Development (3 Features)",
+      "description": "Execute 3 features in parallel (Auth, Payment, Notifications) with coordinated test/build/deploy",
+      "difficulty": "hard",
+      "duration_minutes": 90,
+      "category": "sprint-batch",
+      "setup": {
+        "project": "multifeature-app",
+        "sprint_tasks": [
+          "Feature 1: User Authentication",
+          "Feature 2: Payment Processing",
+          "Feature 3: Push Notifications"
+        ]
+      },
+      "steps": [
+        {
+          "step": 1,
+          "action": "Coordinator: Split sprint into 3 parallel feature paths",
+          "input": {
+            "sprint_tasks": 3
+          },
+          "expected_output": {
+            "parallel_agents": 3,
+            "agent_assignments": {
+              "team_1": "Auth feature (Product → Code Gen → )",
+              "team_2": "Payment feature (parallel)",
+              "team_3": "Notifications feature (parallel)"
+            }
+          }
+        },
+        {
+          "step": 2,
+          "action": "Product Agent (×3): Spec each feature in parallel",
+          "input": {
+            "features": ["auth", "payment", "notifications"]
+          },
+          "expected_output": {
+            "specs_created": 3,
+            "total_time_saved": "parallel execution vs serial"
+          }
+        },
+        {
+          "step": 3,
+          "action": "Code Gen Teams (×3): Generate code for each feature in parallel",
+          "input": {
+            "specs": ["auth_spec", "payment_spec", "notifications_spec"]
+          },
+          "expected_output": {
+            "code_generated": {
+              "auth": {
+                "domain": "AuthRepository, LoginUseCase",
+                "data": "AuthRepositoryImpl, Retrofit service",
+                "presentation": "LoginViewModel, LoginScreen"
+              },
+              "payment": {
+                "domain": "PaymentRepository, ProcessPaymentUseCase",
+                "data": "PaymentRepositoryImpl, Stripe API service",
+                "presentation": "PaymentViewModel, PaymentScreen"
+              },
+              "notifications": {
+                "domain": "NotificationRepository, SendNotificationUseCase",
+                "data": "NotificationRepositoryImpl, Firebase Cloud Messaging",
+                "presentation": "NotificationViewModel, NotificationScreen"
+              }
+            }
+          }
+        },
+        {
+          "step": 4,
+          "action": "Integration: Check cross-feature dependencies",
+          "input": {
+            "code": "all 3 features"
+          },
+          "expected_output": {
+            "cross_feature_imports": "verified (no circular deps)",
+            "shared_modules": ["AuthRepository shared between Auth and Payment for auth header"],
+            "layer_violations": 0
+          }
+        },
+        {
+          "step": 5,
+          "action": "Test Agent (Parallel): Run tests for all 3 features",
+          "input": {
+            "features": ["auth", "payment", "notifications"]
+          },
+          "expected_output": {
+            "test_results": {
+              "auth_tests": { "total": 10, "passed": 10 },
+              "payment_tests": { "total": 8, "passed": 8 },
+              "notifications_tests": { "total": 6, "passed": 6 }
+            },
+            "total_coverage": "71% (combined)"
+          }
+        },
+        {
+          "step": 6,
+          "action": "Lint Agent (Parallel): Check all 3 features",
+          "input": {
+            "features": ["auth", "payment", "notifications"]
+          },
+          "expected_output": {
+            "ktlint_violations": 0,
+            "detekt_violations": 0
+          }
+        },
+        {
+          "step": 7,
+          "action": "Build Agent: Compile all features",
+          "input": {
+            "code": "auth + payment + notifications"
+          },
+          "expected_output": {
+            "compile_result": "success",
+            "apk_size_mb": 52
+          }
+        },
+        {
+          "step": 8,
+          "action": "Deploy Agent: Deploy combined build to Firebase",
+          "input": {
+            "apk": "app-debug.apk (with all 3 features)"
+          },
+          "expected_output": {
+            "deploy_result": "success",
+            "firebase_link": "generated",
+            "testers_notified": true
+          }
+        },
+        {
+          "step": 9,
+          "action": "Git Agent: Create multi-feature PR",
+          "input": {
+            "features": ["auth", "payment", "notifications"]
+          },
+          "expected_output": {
+            "pr_branch": "feature/sprint-q1-batch",
+            "pr_title": "feat(sprint): add auth, payment, and notifications features",
+            "pr_body_documents": ["3 features", "24 tests passing", "71% coverage", "cross-feature verification"]
+          }
+        }
+      ],
+      "pass_criteria": [
+        "All 3 features developed in parallel (time saved)",
+        "Total 24 tests passing, 71% coverage",
+        "Cross-feature dependencies verified",
+        "Single APK with all features",
+        "Successfully deployed to Firebase",
+        "Single PR documents all 3 features",
+        "Ready for QA testing"
+      ],
+      "tags": ["sprint", "parallel", "batch", "multi-feature", "team-coordination"]
+    },
+    {
+      "id": "eval_005",
+      "name": "Pipeline Memory: Learn and Apply Serialization Pattern",
+      "description": "Verify Pipeline Memory captures @Serializable + @SerialName pattern and applies it in next run",
+      "difficulty": "medium",
+      "duration_minutes": 30,
+      "category": "pipeline-memory",
+      "setup": {
+        "initial_memory": "empty",
+        "run_1": "Auth feature (creates DTO pattern)",
+        "run_2": "Payment feature (should apply learned pattern)"
+      },
+      "steps": [
+        {
+          "step": 1,
+          "action": "Run 1 (Auth): Bootstrap + generate auth feature",
+          "input": {
+            "feature": "auth"
+          },
+          "expected_output": {
+            "dto_generated": "LoginDto.kt with @Serializable + @SerialName",
+            "pattern_observed": "@Serializable\\ndata class LoginDto(\\n  @SerialName(\"user_id\")\\n  val userId: String\\n)"
+          }
+        },
+        {
+          "step": 2,
+          "action": "Run 1 (Auth): Complete feature (test, build, deploy)",
+          "input": {
+            "feature": "auth"
+          },
+          "expected_output": {
+            "success": true,
+            "pipeline_memory_update": "Add pattern: Serializable + SerialName"
+          }
+        },
+        {
+          "step": 3,
+          "action": "Run 2 (Payment): Bootstrap new feature",
+          "input": {
+            "feature": "payment"
+          },
+          "expected_output": {
+            "memory_patterns_loaded": 1,
+            "pattern_suggestion": "DTOs use @Serializable + @SerialName (from 1 prior run)"
+          }
+        },
+        {
+          "step": 4,
+          "action": "Data Lead (Run 2): Generate payment DTOs",
+          "input": {
+            "spec": "payment feature spec"
+          },
+          "expected_output": {
+            "dto_follows_pattern": true,
+            "example": "ChargeDto.kt with @Serializable + @SerialName matching prior pattern",
+            "frequency_in_memory": 2
+          }
+        },
+        {
+          "step": 5,
+          "action": "Run 2: Complete payment feature",
+          "input": {
+            "feature": "payment"
+          },
+          "expected_output": {
+            "success": true,
+            "pipeline_memory_updated": true
+          }
+        },
+        {
+          "step": 6,
+          "action": "Verify Pipeline Memory State",
+          "input": {
+            "memory_file": "pipeline_memory.json"
+          },
+          "expected_output": {
+            "patterns": [
+              {
+                "pattern": "Serializable annotation",
+                "frequency": 2,
+                "date_last_used": "current date"
+              }
+            ]
+          }
+        }
+      ],
+      "pass_criteria": [
+        "Run 1: Auth DTOs use @Serializable + @SerialName",
+        "Memory captures pattern after Run 1 success",
+        "Run 2: Bootstrap displays learned pattern from prior run",
+        "Run 2: Data Lead applies same pattern for Payment DTOs",
+        "Memory updated with frequency=2 after Run 2",
+        "Pattern consistency verified across runs"
+      ],
+      "tags": ["pipeline-memory", "learning", "cross-run-consistency", "serialization"]
+    }
+  ],
+  "eval_groups": {
+    "quick_validation": ["eval_001", "eval_003"],
+    "comprehensive": ["eval_002", "eval_004"],
+    "advanced": ["eval_005"],
+    "all": ["eval_001", "eval_002", "eval_003", "eval_004", "eval_005"]
+  },
+  "running_guide": {
+    "quick_test": "Run eval_001 (5 min) + eval_003 (15 min) = 20 min total",
+    "feature_test": "Run eval_002 (45 min) for complete feature implementation validation",
+    "team_test": "Run eval_004 (90 min) for parallel team coordination",
+    "full_suite": "Run all 5 evals (165 min) for comprehensive validation"
+  }
+}
