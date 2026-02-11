@@ -1,0 +1,13 @@
+# Per-project state (not shared)
+.pipeline/
+.pipeline.yml
+pipeline-config.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp

@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Android Agentic Pipeline — Full Architecture v5</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro',system-ui,sans-serif;background:#0a0a0f;color:#e0e0e8;min-height:100vh;padding:40px 48px}
+  h1{font-size:28px;font-weight:700;margin-bottom:6px;color:#fff}
+  .subtitle{color:#888;font-size:15px;margin-bottom:12px}
+  .legend{display:flex;gap:16px;margin-bottom:40px;flex-wrap:wrap}
+  .legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:#999}
+  .legend-dot{width:10px;height:10px;border-radius:3px}
+  .section-title{font-size:13px;font-weight:600;color:#78c257;margin:48px 0 20px;text-transform:uppercase;letter-spacing:1.5px}
+  hr{border:none;border-top:1px solid #1a1a2a;margin:48px 0}
+
+  /* Cards */
+  .card{background:linear-gradient(135deg,#12122a,#0f0f24);border:2px solid #2a2a5a;border-radius:18px;padding:28px;margin-bottom:20px;position:relative;transition:border-color .3s}
+  .card:hover{border-color:#5555ff}
+  .badge{position:absolute;top:-11px;left:20px;padding:3px 14px;border-radius:12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
+  .card-name{font-size:20px;font-weight:700;color:#fff}
+  .card-role{font-size:13px;color:#888;margin-top:4px;line-height:1.5}
+  .card-header{margin-bottom:16px}
+  .skills-row{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}
+  .stag{background:rgba(85,85,255,.1);border:1px solid rgba(85,85,255,.25);color:#8888ff;padding:3px 10px;border-radius:8px;font-size:11px;font-weight:500;font-family:'SF Mono',monospace}
+  .stag.ref{background:rgba(150,100,255,.08);border-color:rgba(150,100,255,.2);color:#aa88ff}
+  .stag.mcp{background:rgba(255,150,50,.1);border-color:rgba(255,150,50,.25);color:#ff9944}
+
+  /* Grids */
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+  .grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px}
+  @media(max-width:1000px){.grid2,.grid3,.grid4{grid-template-columns:1fr}}
+  .grid2 .card,.grid3 .card,.grid4 .card{margin-bottom:0}
+
+  /* Subagent */
+  .sub{background:rgba(255,255,255,.03);border:1px solid #222244;border-radius:12px;padding:14px 16px;flex:1;min-width:180px;position:relative}
+  .sub-name{font-size:13px;font-weight:600;color:#ccc;margin-bottom:4px}
+  .sub-desc{font-size:12px;color:#777;line-height:1.4}
+  .sub .sb{position:absolute;top:-8px;right:12px;padding:2px 8px;border-radius:6px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+  .sb-p{background:#3a2a00;color:#cc8800}.sb-s{background:#0a2a3a;color:#44aacc}.sb-st{background:#1a2a1a;color:#55aa55}.sb-sub{background:#333355;color:#9999cc}
+
+  /* Parallel */
+  .par{background:rgba(80,200,120,.05);border:1px dashed rgba(80,200,120,.3);border-radius:14px;padding:14px;position:relative;margin-top:16px}
+  .par-badge{position:absolute;top:-9px;left:14px;background:#0a0a0f;padding:0 8px;font-size:10px;color:#50c878;font-weight:700;text-transform:uppercase;letter-spacing:1px}
+
+  /* Phase */
+  .phase{border:1px solid #2a2a3a;border-radius:14px;padding:16px;position:relative;margin-top:16px}
+  .phase-b{position:absolute;top:-9px;left:14px;background:#0a0a0f;padding:0 8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
+
+  /* Feedback */
+  .fb-section{margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,100,100,.15)}
+  .fb-label{font-size:11px;color:#ff6666;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:600}
+  .fb-item{display:flex;align-items:center;gap:8px;font-size:12px;color:#cc8888;margin-bottom:6px;padding:6px 10px;background:rgba(255,50,50,.04);border-radius:8px}
+  .fb-arrow{color:#ff6666;font-weight:bold;font-size:14px}
+  .fb-target{color:#ff9999;font-weight:600}
+  .fb-trigger{color:#886666;font-style:italic}
+
+  /* Flow nodes */
+  .flow-row{display:flex;align-items:stretch;gap:0;overflow-x:auto;padding:16px 0}
+  .fn{flex:1;min-width:120px;position:relative;background:linear-gradient(135deg,#1a1a2e,#16162a);border:1.5px solid #2a2a5a;border-radius:14px;padding:14px 12px;margin-right:8px;text-align:center}
+  .fn:last-child{margin-right:0}
+  .fn::after{content:'\2192';position:absolute;right:-10px;top:50%;transform:translateY(-50%);font-size:16px;color:#5555ff;font-weight:bold;z-index:2}
+  .fn:last-child::after{display:none}
+  .fn .fi{font-size:20px;margin-bottom:3px}
+  .fn .ft{font-size:11px;font-weight:600;color:#fff;margin-bottom:1px}
+  .fn .fs{font-size:9px;color:#6666aa;text-transform:uppercase;letter-spacing:.5px}
+  .fn.opt{border-style:dashed;border-color:#444466;opacity:.7}
+  .fn.opt .ft{color:#aaa}
+  .fn.cg{border-color:#cc8800}
+  .fn.co{border-color:#7744cc}
+  .fn.pr{border-color:#ff6688}
+  .fn.pa{background:linear-gradient(135deg,rgba(80,200,120,.08),rgba(80,200,120,.03));border-color:#3a6644;border-style:dashed}
+  .fn.mcp-n{border-color:#ff9944}
+  .pf-group{display:flex;flex-direction:column;gap:4px;flex:1;min-width:120px;position:relative;margin-right:8px}
+  .pf-group::after{content:'\2192';position:absolute;right:-10px;top:50%;transform:translateY(-50%);font-size:16px;color:#5555ff;font-weight:bold;z-index:2}
+  .pf-group .fn{margin-right:0;min-width:auto}
+  .pf-group .fn::after{display:none}
+  .pf-label{font-size:8px;color:#50c878;text-transform:uppercase;letter-spacing:1px;text-align:center;font-weight:700}
+  .opt-ind{position:absolute;top:3px;right:6px;font-size:8px;color:#888;background:rgba(255,255,255,.05);padding:1px 5px;border-radius:4px}
+
+  /* Decision */
+  .decision{background:rgba(255,255,255,.02);border:1px solid #333;border-radius:12px;padding:16px;margin:12px 0;display:flex;align-items:center;gap:16px}
+  .decision-d{width:36px;height:36px;flex-shrink:0;background:rgba(255,200,50,.1);border:1px solid rgba(255,200,50,.3);transform:rotate(45deg);display:flex;align-items:center;justify-content:center;border-radius:4px}
+  .decision-d span{transform:rotate(-45deg);font-size:12px}
+  .decision p{font-size:12px;color:#aaa;line-height:1.6}
+  .decision strong{color:#ffcc44}
+
+  /* MCP sources */
+  .mcp-card{background:linear-gradient(135deg,#1a1208,#14100a);border:1.5px solid rgba(255,150,50,.25);border-radius:14px;padding:18px;position:relative}
+  .mcp-card .badge{background:#cc6600;color:#fff}
+  .mcp-card h4{font-size:14px;color:#ff9944;margin-bottom:4px}
+  .mcp-card p{font-size:12px;color:#aa8855;line-height:1.5}
+
+  /* Task type cards */
+  .tt{background:rgba(255,255,255,.02);border:1px solid #2a2a3a;border-radius:12px;padding:16px}
+  .tt h4{font-size:13px;font-weight:600;color:#fff;margin-bottom:6px}
+  .tt .trigger{font-size:11px;color:#666;margin-bottom:8px}
+  .tt .path{font-size:11px;color:#5555ff;font-family:'SF Mono',monospace;line-height:1.6}
+  .tt .skip{color:#888;font-style:italic}
+
+  /* Blueprint */
+  .bp{background:rgba(204,136,0,.04);border:1px solid rgba(204,136,0,.15);border-radius:10px;padding:14px;margin-top:12px;font-size:12px;color:#aa8844;line-height:1.7}
+  .bp code{background:rgba(204,136,0,.1);padding:1px 6px;border-radius:4px;font-family:'SF Mono',monospace;font-size:11px;color:#cc9944}
+
+  /* Summary table */
+  .st{width:100%;border-collapse:separate;border-spacing:0;margin:20px 0}
+  .st th{background:#141430;color:#8888cc;font-size:10px;text-transform:uppercase;letter-spacing:1px;padding:10px 14px;text-align:left;border-bottom:1px solid #2a2a4a}
+  .st td{padding:10px 14px;font-size:12px;color:#ccc;border-bottom:1px solid #1a1a2a;vertical-align:top}
+  .st tr:hover td{background:rgba(85,85,255,.03)}
+  .st .mono{font-family:'SF Mono',monospace;font-size:11px;color:#8888ff}
+  .st .yes{color:#50c878}.st .no{color:#555}.st .fbc{color:#ff8888;font-size:11px}
+
+  .tag{display:inline-block;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:600;margin:1px 2px}
+  .t-a{background:rgba(85,85,255,.15);color:#8888ff}
+  .t-sub{background:rgba(150,150,200,.1);color:#9999bb}
+  .t-p{background:rgba(204,136,0,.15);color:#cc8800}
+  .t-sr{background:rgba(68,170,204,.15);color:#44aacc}
+  .t-st{background:rgba(85,170,85,.15);color:#55aa55}
+  .t-mcp{background:rgba(255,150,50,.15);color:#ff9944}
+  .t-prod{background:rgba(255,102,136,.15);color:#ff6688}
+  .t-cond{background:rgba(100,100,100,.15);color:#888}
+
+  .notes{background:rgba(255,200,50,.05);border:1px solid rgba(255,200,50,.12);border-radius:14px;padding:24px;margin:20px 0}
+  .notes h4{color:#ffcc44;font-size:14px;margin-bottom:10px}
+  .notes p{color:#999;font-size:13px;line-height:1.7;margin-bottom:8px}
+  .notes p:last-child{margin-bottom:0}
+
+  /* Feedback diagram */
+  .fbd{background:linear-gradient(135deg,#120a0a,#100808);border:1px solid #3a1a1a;border-radius:18px;padding:28px;margin:20px 0}
+  .fbd-title{font-size:15px;font-weight:600;color:#ff8888;margin-bottom:16px}
+  .fbl{display:flex;align-items:center;gap:12px;padding:10px 14px;margin-bottom:6px;background:rgba(255,50,50,.04);border:1px solid rgba(255,50,50,.1);border-radius:10px}
+  .fbl-n{width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:rgba(255,100,100,.15);color:#ff8888;border-radius:50%;font-size:11px;font-weight:700;flex-shrink:0}
+  .fbl-d{font-size:12px;color:#cc9999;line-height:1.4}
+  .fbl-d strong{color:#ff9999}
+  .fbl-p{font-size:10px;color:#885555;font-family:'SF Mono',monospace;margin-top:2px}
+
+  /* Bootstrap */
+  .boot-card{background:linear-gradient(135deg,#0a1a18,#081614);border:2px solid rgba(0,210,180,.3);border-radius:18px;padding:28px;position:relative;margin-bottom:20px}
+  .boot-card:hover{border-color:#00d2b4}
+  .boot-card .badge{background:#00a88e;color:#fff}
+  .boot-step{background:rgba(0,210,180,.04);border:1px solid rgba(0,210,180,.12);border-radius:12px;padding:16px;position:relative}
+  .boot-step-n{position:absolute;top:-9px;left:14px;background:#0a1a18;padding:0 8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#00d2b4}
+  .boot-step h5{font-size:13px;font-weight:600;color:#00d2b4;margin-bottom:6px}
+  .boot-step p{font-size:12px;color:#779990;line-height:1.5}
+  .ctx-card{background:rgba(255,255,255,.02);border:1px solid #2a3a36;border-radius:10px;padding:14px;flex:1;min-width:220px}
+  .ctx-card h5{font-size:13px;font-weight:600;margin-bottom:6px}
+  .ctx-card p{font-size:11px;line-height:1.5}
+  .ctx-card ul{list-style:none;padding:0;margin:6px 0 0}
+  .ctx-card ul li{font-size:11px;padding:3px 0;color:#889}
+  .ctx-card ul li::before{content:'→ ';color:#00d2b4}
+  .ctx-work{border-color:rgba(68,170,204,.2)}
+  .ctx-work h5{color:#44aacc}
+  .ctx-work p{color:#668899}
+  .ctx-personal{border-color:rgba(255,102,136,.2)}
+  .ctx-personal h5{color:#ff6688}
+  .ctx-personal p{color:#886666}
+  .cfg-out{background:rgba(0,210,180,.06);border:1px solid rgba(0,210,180,.2);border-radius:12px;padding:16px;margin-top:16px}
+  .cfg-out h5{font-size:13px;font-weight:600;color:#00d2b4;margin-bottom:8px}
+  .cfg-row{display:flex;gap:8px;flex-wrap:wrap}
+  .cfg-item{background:rgba(0,210,180,.08);border:1px solid rgba(0,210,180,.15);border-radius:8px;padding:6px 12px;font-size:11px;color:#55ccbb;font-family:'SF Mono',monospace}
+  .cfg-item.off{opacity:.4;text-decoration:line-through}
+  .fn.boot{border-color:#00d2b4;background:linear-gradient(135deg,rgba(0,210,180,.08),rgba(0,210,180,.03))}
+  .stag.boot{background:rgba(0,210,180,.1);border-color:rgba(0,210,180,.25);color:#00d2b4}
+  .t-boot{background:rgba(0,210,180,.15);color:#00d2b4}
+
+  /* Pipeline Memory */
+  .mem-card{background:linear-gradient(135deg,#1a0f1a,#160c16);border:2px solid rgba(220,100,255,.3);border-radius:18px;padding:28px;position:relative;margin-bottom:20px}
+  .mem-card:hover{border-color:#dc64ff}
+  .mem-card .badge{background:#bb44ee;color:#fff}
+  .mem-lane{background:rgba(220,100,255,.04);border:1px solid rgba(220,100,255,.12);border-radius:10px;padding:14px;flex:1;min-width:180px}
+  .mem-lane h5{font-size:12px;font-weight:600;color:#dd88ff;margin-bottom:6px}
+  .mem-lane p{font-size:11px;color:#997799;line-height:1.5}
+  .mem-lane code{font-size:10px;color:#cc88ff;background:rgba(220,100,255,.08);padding:1px 5px;border-radius:3px}
+  .stag.mem{background:rgba(220,100,255,.1);border-color:rgba(220,100,255,.25);color:#dd88ff}
+  .t-mem{background:rgba(220,100,255,.15);color:#dd88ff}
+  .fn.mem{border-color:#dd88ff;background:linear-gradient(135deg,rgba(220,100,255,.08),rgba(220,100,255,.03))}
+</style>
+</head>
+<body>
+
+<h1>Android Agentic Pipeline — Full Architecture v5</h1>
+<p class="subtitle">Pre-pipeline bootstrap | Lean coordinator | Flexible MCP sources | Product planning | Kotlin | Jetpack Compose | Hilt | Clean Architecture | Engineering team</p>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#00d2b4"></div> Bootstrap</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#dd88ff"></div> Pipeline Memory</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ff9944"></div> MCP Source</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ff6688"></div> Product Agent</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#7744cc"></div> Coordinator (lean router)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#cc8800"></div> Principal / Architect</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#2288aa"></div> Senior Lead</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#55aa55"></div> Staff / Integration</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#5555ff"></div> Pipeline Agent</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#50c878"></div> Parallel</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ffcc44"></div> Human Review Gate</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ff6666"></div> Feedback</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#444466"></div> Conditional</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- FULL PIPELINE FLOW                                      -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section-title">Full Pipeline Flow</div>
+
+<div style="background:rgba(220,100,255,.04);border:1px dashed rgba(220,100,255,.2);border-radius:14px;padding:10px 16px;margin-bottom:8px;display:flex;align-items:center;gap:10px">
+  <span style="font-size:14px">🧠</span>
+  <span style="font-size:11px;font-weight:600;color:#dd88ff">Pipeline Memory</span>
+  <span style="font-size:10px;color:#997799">— every agent reads from and writes to this persistent local store (decisions, learnings, mistakes, patterns)</span>
+</div>
+<div class="flow-row">
+  <div class="fn boot">
+    <div class="fi">⚡</div>
+    <div class="ft">Bootstrap</div>
+    <div class="fs">Runs Once</div>
+  </div>
+  <div class="pf-group">
+    <div class="pf-label">Discovered Sources</div>
+    <div class="fn mcp-n"><div class="ft">Any MCP</div><div class="fs">Discovered</div></div>
+    <div class="fn mcp-n"><div class="ft">Local Backlog</div><div class="fs">Fallback</div></div>
+  </div>
+  <div class="fn co">
+    <div class="fi">🔀</div>
+    <div class="ft">Coordinator</div>
+    <div class="fs">Lean Router</div>
+  </div>
+  <div class="fn pr" style="border-style:dashed">
+    <div class="opt-ind">if needed</div>
+    <div class="fi">📋</div>
+    <div class="ft">Product Agent</div>
+    <div class="fs">Plan + Spec</div>
+  </div>
+  <div class="fn" style="border-color:#ffcc44;border-width:2px">
+    <div class="fi">⏸</div>
+    <div class="ft">Review</div>
+    <div class="fs">Approve / Edit</div>
+  </div>
+  <div class="fn opt">
+    <div class="opt-ind">if new</div>
+    <div class="ft">Scaffold</div>
+    <div class="fs">Conditional</div>
+  </div>
+  <div class="fn cg">
+    <div class="fi">⚙️</div>
+    <div class="ft">Code Gen</div>
+    <div class="fs">Team of 5</div>
+  </div>
+  <div class="pf-group">
+    <div class="pf-label">Parallel (configurable)</div>
+    <div class="fn pa" style="position:relative"><div class="opt-ind">configurable</div><div class="ft">Test</div><div class="fs">+ 2 subs</div></div>
+    <div class="fn pa"><div class="ft">Lint</div><div class="fs">Self-heal</div></div>
+  </div>
+  <div class="fn"><div class="ft">Build</div><div class="fs">+ Signing</div></div>
+  <div class="fn" style="border-style:dashed;border-color:#444466"><div class="opt-ind">configurable</div><div class="ft">Deploy</div><div class="fs">If enabled</div></div>
+  <div class="fn"><div class="ft">Git</div><div class="fs">PR Created</div></div>
+  <div class="fn" style="border-color:#ffcc44;border-width:2px"><div class="fi">⏸</div><div class="ft">Review</div><div class="fs">Human Merge</div></div>
+</div>
+
+<hr>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SECTION: PRE-PIPELINE BOOTSTRAP                         -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section-title">Pre-Pipeline Bootstrap — Runs Once Before Anything</div>
+
+<div class="boot-card">
+  <div class="badge" style="background:#00a88e;color:#fff">Runs Once</div>
+  <div class="card-header">
+    <div class="card-name">⚡ Bootstrap Agent</div>
+    <div class="card-role">
+      Runs once on first use for a project, then persists config to <code style="color:#00d2b4">.pipeline.yml</code>.
+      On subsequent runs, loads saved config and skips questions (fast restart).
+      Can be re-run anytime with <code style="color:#00d2b4">--reconfigure</code> to change context, MCPs, or preferences.
+      Everything downstream reads from this config.
+    </div>
+  </div>
+
+  <div class="skills-row">
+    <span class="stag boot">bootstrap-setup</span>
+    <span class="stag boot">mcp-discovery</span>
+    <span class="stag boot">spec-quality-check</span>
+    <span class="stag ref">refs/pipeline-config-schema.md</span>
+  </div>
+
+  <!-- Restart / Persist behavior -->
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">
+    <div style="background:rgba(0,210,180,.05);border:1px solid rgba(0,210,180,.15);border-radius:10px;padding:14px;flex:1;min-width:200px">
+      <div style="font-size:12px;font-weight:600;color:#00d2b4;margin-bottom:4px">First Run</div>
+      <div style="font-size:11px;color:#558877;line-height:1.5">Auto-detects what it can, asks interactive questions for the rest. Saves everything to <code style="color:#00d2b4">.pipeline.yml</code> in the project root.</div>
+    </div>
+    <div style="background:rgba(80,200,120,.04);border:1px solid rgba(80,200,120,.15);border-radius:10px;padding:14px;flex:1;min-width:200px">
+      <div style="font-size:12px;font-weight:600;color:#50c878;margin-bottom:4px">Subsequent Runs (Fast Restart)</div>
+      <div style="font-size:11px;color:#668866;line-height:1.5">Reads <code style="color:#50c878">.pipeline.yml</code> → skips all questions → re-runs MCP discovery only (in case connectors changed) → pipeline ready in seconds.</div>
+    </div>
+    <div style="background:rgba(255,200,50,.04);border:1px solid rgba(255,200,50,.15);border-radius:10px;padding:14px;flex:1;min-width:200px">
+      <div style="font-size:12px;font-weight:600;color:#ffcc44;margin-bottom:4px">Reconfigure</div>
+      <div style="font-size:11px;color:#888855;line-height:1.5"><code style="color:#ffcc44">--reconfigure</code> re-runs full Bootstrap: asks questions again, re-detects everything. Use when context changes (e.g., project goes from solo to team).</div>
+    </div>
+  </div>
+
+  <!-- Step 1: Context Detection -->
+  <div class="boot-step" style="margin-top:20px">
+    <div class="boot-step-n">Step 1 — Context Detection (Flexible)</div>
+    <p style="margin-top:4px;margin-bottom:14px;font-size:12px;color:#66aa99">What kind of project is this? Not a binary choice — the context is open-ended and shapes how the entire pipeline behaves.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <div class="ctx-card ctx-work">
+        <h5>Work (Full Team)</h5>
+        <p>Product team + designers + backend. Tasks pre-specced.</p>
+        <ul>
+          <li>Product Agent: <strong style="color:#44aacc">per-task</strong> (safety net only)</li>
+          <li>Specs usually complete</li>
+        </ul>
+      </div>
+      <div class="ctx-card ctx-personal">
+        <h5>Personal / Solo</h5>
+        <p>Solo dev, rough ideas, one-liner tasks.</p>
+        <ul>
+          <li>Product Agent: <strong style="color:#ff6688">always on</strong></li>
+          <li>Specs need full decomposition</li>
+        </ul>
+      </div>
+      <div class="ctx-card" style="border-color:rgba(170,136,255,.2)">
+        <h5 style="color:#aa88ff">Freelance / Contract</h5>
+        <p style="color:#776699">Client gives vague briefs or detailed PRDs — varies wildly per client.</p>
+        <ul>
+          <li>Product Agent: <strong style="color:#aa88ff">per-task</strong></li>
+          <li>Spec quality is unpredictable</li>
+        </ul>
+      </div>
+      <div class="ctx-card" style="border-color:rgba(255,200,50,.2)">
+        <h5 style="color:#ffcc44">Open Source</h5>
+        <p style="color:#998844">Community PRs, external issues, varying quality.</p>
+        <ul>
+          <li>Product Agent: <strong style="color:#ffcc44">per-task</strong></li>
+          <li>Community issues can be anything</li>
+        </ul>
+      </div>
+    </div>
+    <div style="font-size:11px;color:#558877;line-height:1.6;padding:10px;margin-top:12px;background:rgba(0,210,180,.04);border-radius:8px">
+      Context is a <strong style="color:#00d2b4">free-form string</strong>, not an enum. These are common patterns, but Bootstrap stores whatever you tell it. The key thing it derives is: <em>how much product thinking does the pipeline need to do for you?</em>
+    </div>
+  </div>
+
+  <!-- Step 1.5: Interactive Questions -->
+  <div class="boot-step" style="margin-top:20px">
+    <div class="boot-step-n">Step 1b — Interactive Questions (When Needed)</div>
+    <p style="margin-top:4px;margin-bottom:14px;font-size:12px;color:#66aa99">Bootstrap tries to auto-detect first. When it can't confidently determine something, it asks you directly. Short, targeted questions — not a wizard.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+      <div style="background:rgba(0,210,180,.05);border:1px solid rgba(0,210,180,.12);border-radius:8px;padding:12px;flex:1;min-width:200px">
+        <div style="font-size:11px;font-weight:600;color:#00d2b4;margin-bottom:4px">Auto-detected (no questions)</div>
+        <div style="font-size:10px;color:#558877;line-height:1.5">
+          Project state (new vs existing), connected MCPs, git remote, existing folder structure, architecture patterns in code
+        </div>
+      </div>
+      <div style="background:rgba(255,200,50,.05);border:1px solid rgba(255,200,50,.12);border-radius:8px;padding:12px;flex:1;min-width:200px">
+        <div style="font-size:11px;font-weight:600;color:#ffcc44;margin-bottom:4px">May ask if ambiguous</div>
+        <div style="font-size:10px;color:#888855;line-height:1.5">
+          "Is this a work project or personal?" · "Do you have a product team?" · "Which MCP should be the primary task source?" · "What architecture style do you prefer?"
+        </div>
+      </div>
+      <div style="background:rgba(255,100,100,.04);border:1px solid rgba(255,100,100,.12);border-radius:8px;padding:12px;flex:1;min-width:200px">
+        <div style="font-size:11px;font-weight:600;color:#ff8888;margin-bottom:4px">Always asks on first run</div>
+        <div style="font-size:10px;color:#886666;line-height:1.5">
+          "Quick setup: what's the context for this project?" — one question, free-form answer. Everything else is auto-detected or inferred.
+        </div>
+      </div>
+    </div>
+    <div style="font-size:11px;color:#558877;line-height:1.6;padding:10px;background:rgba(0,210,180,.04);border-radius:8px">
+      Answers are saved to <code style="color:#00d2b4">.pipeline.yml</code> — Bootstrap doesn't re-ask on restart. Three ways to change answers: edit the YAML directly, run <code style="color:#00d2b4">--reconfigure</code> to re-do the full setup, or <code style="color:#00d2b4">--reconfigure context</code> to re-do just one step. The file is project-scoped and can be committed to git so team members share the same config.
+    </div>
+  </div>
+
+  <!-- Step 2: MCP Discovery -->
+  <div class="boot-step" style="margin-top:20px">
+    <div class="boot-step-n">Step 2 — MCP Discovery</div>
+    <p style="margin-top:4px;margin-bottom:14px;font-size:12px;color:#66aa99">Scan for all available MCP connectors. Not hardcoded — any MCP-compliant tool works.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+      <div style="background:rgba(255,150,50,.06);border:1px solid rgba(255,150,50,.15);border-radius:8px;padding:10px 14px;flex:1;min-width:140px">
+        <div style="font-size:11px;font-weight:600;color:#ff9944;margin-bottom:3px">Task Sources</div>
+        <div style="font-size:10px;color:#886644;line-height:1.5">Any task/project management MCP — whatever your team uses. Tickets, stories, sprints, backlogs.</div>
+      </div>
+      <div style="background:rgba(255,150,50,.06);border:1px solid rgba(255,150,50,.15);border-radius:8px;padding:10px 14px;flex:1;min-width:140px">
+        <div style="font-size:11px;font-weight:600;color:#ff9944;margin-bottom:3px">Design Sources</div>
+        <div style="font-size:10px;color:#886644;line-height:1.5">Any design tool MCP — for extracting specs, tokens, component trees, layouts</div>
+      </div>
+      <div style="background:rgba(255,150,50,.06);border:1px solid rgba(255,150,50,.15);border-radius:8px;padding:10px 14px;flex:1;min-width:140px">
+        <div style="font-size:11px;font-weight:600;color:#ff9944;margin-bottom:3px">Code Sources</div>
+        <div style="font-size:10px;color:#886644;line-height:1.5">Any code platform MCP — for PRs, issues, CI status, branch management</div>
+      </div>
+      <div style="background:rgba(255,150,50,.06);border:1px solid rgba(255,150,50,.15);border-radius:8px;padding:10px 14px;flex:1;min-width:140px">
+        <div style="font-size:11px;font-weight:600;color:#ff9944;margin-bottom:3px">Fallback</div>
+        <div style="font-size:10px;color:#886644;line-height:1.5">Local backlog.md or tasks.json — always available, no MCP needed. The zero-dependency option.</div>
+      </div>
+    </div>
+    <div style="font-size:11px;color:#558877;line-height:1.6;padding:10px;background:rgba(0,210,180,.04);border-radius:8px">
+      Discovery outputs a list of <code style="color:#00d2b4">active_mcps</code> with their capabilities (can-read-tasks, can-read-designs, can-manage-prs, etc).
+      The Coordinator uses this list to know what sources to poll. If no MCPs are found, local backlog is the only source.
+    </div>
+  </div>
+
+  <!-- Step 3: Spec Quality Assessment -->
+  <div class="boot-step" style="margin-top:20px">
+    <div class="boot-step-n">Step 3 — Spec Quality Assessment</div>
+    <p style="margin-top:4px;margin-bottom:14px;font-size:12px;color:#66aa99">Sample incoming tasks and grade their completeness. This determines Product Agent behavior.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <div style="background:rgba(80,200,120,.04);border:1px solid rgba(80,200,120,.15);border-radius:8px;padding:12px;flex:1;min-width:180px">
+        <div style="font-size:12px;font-weight:600;color:#50c878;margin-bottom:4px">Well-Specced ✓</div>
+        <div style="font-size:11px;color:#668866;line-height:1.5">Has acceptance criteria, linked designs, API contracts, clear scope. Product Agent <strong style="color:#50c878">skipped</strong>.</div>
+      </div>
+      <div style="background:rgba(255,200,50,.04);border:1px solid rgba(255,200,50,.15);border-radius:8px;padding:12px;flex:1;min-width:180px">
+        <div style="font-size:12px;font-weight:600;color:#ffcc44;margin-bottom:4px">Partial Spec ⚠</div>
+        <div style="font-size:11px;color:#888866;line-height:1.5">Has some detail but missing edge cases, no designs, vague scope. Product Agent <strong style="color:#ffcc44">fills gaps</strong>.</div>
+      </div>
+      <div style="background:rgba(255,100,100,.04);border:1px solid rgba(255,100,100,.15);border-radius:8px;padding:12px;flex:1;min-width:180px">
+        <div style="font-size:12px;font-weight:600;color:#ff8888;margin-bottom:4px">One-Liner ✗</div>
+        <div style="font-size:11px;color:#886666;line-height:1.5">Just a title like "add dark mode". No criteria, no designs, no scope. Product Agent <strong style="color:#ff8888">fully active</strong>.</div>
+      </div>
+    </div>
+    <div class="decision" style="margin-top:12px">
+      <div class="decision-d"><span>?</span></div>
+      <p>
+        <strong>Per-task override:</strong> Even in a "work" context where specs are normally good, individual tasks can still be thin.
+        The spec quality check runs <strong>per-task</strong> at the Coordinator level too — Bootstrap just sets the default behavior.
+      </p>
+    </div>
+  </div>
+
+  <!-- Step 4: Project State -->
+  <div class="boot-step" style="margin-top:20px">
+    <div class="boot-step-n">Step 4 — Project State Detection</div>
+    <p style="margin-top:4px;margin-bottom:8px;font-size:12px;color:#66aa99">Is this a new project (needs scaffolding) or an existing codebase?</p>
+    <div style="font-size:11px;color:#558877;line-height:1.6;padding:10px;background:rgba(0,210,180,.04);border-radius:8px">
+      Checks for: Kotlin source files, build.gradle.kts, existing folder structure (domain/, data/, presentation/ or feature modules).
+      If none found → Scaffold Agent activated. If found → Scaffold skipped. Also detects architecture style of existing project
+      (are they already using Clean Architecture? MVVM? MVI? MVP? None?) so Code Gen can match the existing patterns.
+    </div>
+  </div>
+
+  <!-- Step 5: Pipeline Stage Configuration -->
+  <div class="boot-step" style="margin-top:20px">
+    <div class="boot-step-n">Step 5 — Pipeline Stage Configuration</div>
+    <p style="margin-top:4px;margin-bottom:14px;font-size:12px;color:#66aa99">Which pipeline stages are active? Not every project needs every agent. Bootstrap configures this based on context + interactive answers.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <div style="background:rgba(80,200,120,.04);border:1px solid rgba(80,200,120,.15);border-radius:8px;padding:12px;flex:1;min-width:160px">
+        <div style="font-size:12px;font-weight:600;color:#50c878;margin-bottom:4px">Always Active</div>
+        <div style="font-size:11px;color:#668866;line-height:1.5">Coordinator, Code Gen, Git — these are the pipeline backbone. Can't be turned off.</div>
+      </div>
+      <div style="background:rgba(255,200,50,.04);border:1px solid rgba(255,200,50,.15);border-radius:8px;padding:12px;flex:1;min-width:160px">
+        <div style="font-size:12px;font-weight:600;color:#ffcc44;margin-bottom:4px">Configurable</div>
+        <div style="font-size:11px;color:#888855;line-height:1.5">
+          <strong style="color:#ffcc44">Product Agent</strong> — always / never / per-task<br>
+          <strong style="color:#ffcc44">Scaffold</strong> — on / off<br>
+          <strong style="color:#ffcc44">Test</strong> — always / never / per-task<br>
+          <strong style="color:#ffcc44">Lint</strong> — always / never / per-task<br>
+          <strong style="color:#ffcc44">Build</strong> — always / never / per-task<br>
+          <strong style="color:#ffcc44">Deploy</strong> — always / never / per-task
+        </div>
+      </div>
+      <div style="background:rgba(255,100,100,.04);border:1px solid rgba(255,100,100,.15);border-radius:8px;padding:12px;flex:1;min-width:160px">
+        <div style="font-size:12px;font-weight:600;color:#ff8888;margin-bottom:4px">Common Off Scenarios</div>
+        <div style="font-size:11px;color:#886666;line-height:1.5">
+          <strong style="color:#ff8888">Test off</strong> — prototyping, hackathon, early exploration, quick PoC<br>
+          <strong style="color:#ff8888">Deploy off</strong> — personal projects, libraries, local-only builds, no CI<br>
+          <strong style="color:#ff8888">Build off</strong> — code gen + review only, no compilation step needed
+        </div>
+      </div>
+    </div>
+    <div class="decision" style="margin-top:12px">
+      <div class="decision-d"><span>?</span></div>
+      <p>
+        <strong>How is this set?</strong><br>
+        Auto-inferred from context (personal project with no CI → deploy off), or asked interactively: <em>"Do you want tests generated for this project?"</em> / <em>"Do you need deployment (Play Console/Firebase)?"</em>. Overridable per-task via CLI: <code style="color:#00d2b4">--skip-test</code>, <code style="color:#00d2b4">--skip-deploy</code>.
+      </p>
+    </div>
+  </div>
+
+  <!-- Output: Pipeline Config -->
+  <div class="cfg-out" style="margin-top:20px">
+    <h5>Bootstrap Output → <code style="font-size:12px;color:#00d2b4">.pipeline.yml</code> (persisted) + <code style="font-size:12px;color:#00d2b4">pipeline-config.json</code> (runtime)</h5>
+    <p style="font-size:11px;color:#66aa99;margin-bottom:10px;line-height:1.5">
+      <code style="color:#00d2b4">.pipeline.yml</code> lives in the project root and is committed to git (team-shared config).
+      <code style="color:#00d2b4">pipeline-config.json</code> is the runtime version with live MCP state — regenerated on every restart.
+      The Coordinator reads the runtime config for every task.
+    </p>
+    <div class="cfg-row">
+      <div class="cfg-item">context: "free-form string"</div>
+      <div class="cfg-item">has_product_team: true | false</div>
+      <div class="cfg-item">active_mcps: [...]</div>
+      <div class="cfg-item">product_agent: "always" | "never" | "per-task"</div>
+      <div class="cfg-item">scaffold: true | false</div>
+      <div class="cfg-item">test_agent: "always" | "never" | "per-task"</div>
+      <div class="cfg-item">lint_agent: "always" | "never" | "per-task"</div>
+      <div class="cfg-item">build_agent: "always" | "never" | "per-task"</div>
+      <div class="cfg-item">deploy_agent: "always" | "never" | "per-task"</div>
+      <div class="cfg-item">review_gate: "always" | "manual" | "auto"</div>
+      <div class="cfg-item">spec_quality_default: "high" | "mixed" | "low"</div>
+      <div class="cfg-item">existing_arch: "clean" | "mvvm" | "mvi" | "mvp" | "none"</div>
+      <div class="cfg-item">task_sources: [{ type, mcp, capabilities }]</div>
+      <div class="cfg-item">design_sources: [{ type, mcp }]</div>
+      <div class="cfg-item">interactive_answers: { ... }</div>
+    </div>
+  </div>
+</div>
+
+<!-- Concrete examples across contexts -->
+<div style="font-size:13px;font-weight:600;color:#00d2b4;margin:20px 0 14px">How Bootstrap Configures Different Contexts</div>
+<div class="grid2" style="margin-bottom:14px">
+  <div style="background:rgba(68,170,204,.04);border:1px solid rgba(68,170,204,.15);border-radius:14px;padding:20px">
+    <div style="font-size:13px;font-weight:600;color:#44aacc;margin-bottom:10px">Work — Full Team at Company X</div>
+    <div style="font-size:11px;color:#668899;line-height:1.8">
+      Bootstrap asks: <em>"What's the context?"</em> → <code style="color:#44aacc">"Work, Android team"</code><br>
+      Auto-detects: Task MCP (tasks), Design MCP (designs), Code MCP (PRs/CI)<br>
+      Spec quality: High — tickets have AC + linked designs<br>
+      Project state: Existing Clean Architecture codebase<br><br>
+      <strong style="color:#44aacc">Config:</strong> product_agent = "per-task" · scaffold = off · test = "always" · deploy = "per-task"
+    </div>
+  </div>
+  <div style="background:rgba(255,102,136,.04);border:1px solid rgba(255,102,136,.15);border-radius:14px;padding:20px">
+    <div style="font-size:13px;font-weight:600;color:#ff6688;margin-bottom:10px">Personal — Solo Side Project</div>
+    <div style="font-size:11px;color:#886666;line-height:1.8">
+      Bootstrap asks: <em>"What's the context?"</em> → <code style="color:#ff6688">"Personal project, just me"</code><br>
+      Auto-detects: Code MCP (issues only), no design tool<br>
+      Spec quality: Low — issues are one-liners<br>
+      Project state: New, no existing code<br><br>
+      <strong style="color:#ff6688">Config:</strong> product_agent = "always" · scaffold = on · test = "per-task" · deploy = "never"
+    </div>
+  </div>
+</div>
+<div class="grid2">
+  <div style="background:rgba(170,136,255,.04);border:1px solid rgba(170,136,255,.15);border-radius:14px;padding:20px">
+    <div style="font-size:13px;font-weight:600;color:#aa88ff;margin-bottom:10px">Freelance — Client Work</div>
+    <div style="font-size:11px;color:#776699;line-height:1.8">
+      Bootstrap asks: <em>"What's the context?"</em> → <code style="color:#aa88ff">"Freelance, client sends specs"</code><br>
+      Auto-detects: Task MCP (tasks), no design tool connected<br>
+      Bootstrap asks: <em>"Do you have a product team?"</em> → <code style="color:#aa88ff">"Client acts as PM but specs vary"</code><br>
+      Spec quality: Mixed — some detailed, some vague<br><br>
+      <strong style="color:#aa88ff">Config:</strong> product_agent = "per-task" · scaffold = off · test = "always" · deploy = "per-task"
+    </div>
+  </div>
+  <div style="background:rgba(255,200,50,.04);border:1px solid rgba(255,200,50,.15);border-radius:14px;padding:20px">
+    <div style="font-size:13px;font-weight:600;color:#ffcc44;margin-bottom:10px">Open Source — Community Contributions</div>
+    <div style="font-size:11px;color:#998844;line-height:1.8">
+      Bootstrap asks: <em>"What's the context?"</em> → <code style="color:#ffcc44">"Open source library, community PRs"</code><br>
+      Auto-detects: Code MCP (issues + PRs), no task tracker<br>
+      Spec quality: Mixed — maintainer issues are good, community issues vary<br>
+      Project state: Existing codebase, MVC-ish<br><br>
+      <strong style="color:#ffcc44">Config:</strong> product_agent = "per-task" · scaffold = off · test = "always" · deploy = "never" · existing_arch = "mvc"
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SECTION: PIPELINE MEMORY                                -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section-title">Pipeline Memory — Persistent Context Store</div>
+
+<div class="mem-card">
+  <div class="badge" style="background:#bb44ee;color:#fff">Always Active</div>
+  <div class="card-header">
+    <div class="card-name">🧠 Pipeline Memory</div>
+    <div class="card-role">
+      Persistent local store that every agent reads from and writes to. Captures everything the pipeline learns:
+      architectural decisions, mistakes and how they were fixed, patterns that work in this codebase,
+      agent outputs, feedback loop resolutions. Survives between sessions. Gets smarter over time.
+    </div>
+  </div>
+
+  <div class="skills-row">
+    <span class="stag mem">memory-store</span>
+    <span class="stag mem">memory-query</span>
+    <span class="stag mem">memory-index</span>
+    <span class="stag ref">refs/memory-schema.md</span>
+  </div>
+
+  <!-- What gets stored -->
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:20px">
+    <div class="mem-lane">
+      <h5>Decisions</h5>
+      <p>Architect chose repository pattern for networking. Product Agent decomposed feature X into 4 tasks. Coordinator routed bug #123 to Data Lead.</p>
+      <div style="margin-top:6px"><code>type: "decision"</code> <code>agent: "architect"</code> <code>reason: "..."</code></div>
+    </div>
+    <div class="mem-lane">
+      <h5>Learnings</h5>
+      <p>This codebase uses a custom DI setup (not Hilt). API responses wrap data in a "result" key. Team convention: ViewModels follow naming: FeatureViewModel.</p>
+      <div style="margin-top:6px"><code>type: "learning"</code> <code>source: "code-analysis"</code></div>
+    </div>
+    <div class="mem-lane">
+      <h5>Mistakes + Corrections</h5>
+      <p>Generated DTO without @Serializable annotation → build failed → Data Lead fixed. Android import in Domain layer → detekt caught → Architect re-planned.</p>
+      <div style="margin-top:6px"><code>type: "mistake"</code> <code>fix: "..."</code> <code>prevent: "..."</code></div>
+    </div>
+    <div class="mem-lane">
+      <h5>Patterns</h5>
+      <p>Every ViewModel in this project follows: init { viewModelScope.launch { } } + _uiState: MutableStateFlow + UiState sealed class. Navigation uses NavHost with type-safe routes. Error handling uses sealed Result class.</p>
+      <div style="margin-top:6px"><code>type: "pattern"</code> <code>scope: "project"</code></div>
+    </div>
+  </div>
+
+  <!-- Who writes, who reads -->
+  <div style="margin-top:20px;display:flex;gap:14px;flex-wrap:wrap">
+    <div style="background:rgba(220,100,255,.05);border:1px solid rgba(220,100,255,.15);border-radius:12px;padding:16px;flex:1;min-width:280px">
+      <div style="font-size:12px;font-weight:600;color:#dd88ff;margin-bottom:10px">Every Agent Writes</div>
+      <div style="font-size:11px;color:#997799;line-height:1.8">
+        <strong style="color:#cc88ff">Bootstrap</strong> → project context, detected arch, MCP capabilities<br>
+        <strong style="color:#cc88ff">Product Agent</strong> → feature specs, task decomposition rationale, design decisions<br>
+        <strong style="color:#cc88ff">Architect</strong> → protocol contracts, layer boundaries, blueprint decisions<br>
+        <strong style="color:#cc88ff">Domain/Data/Pres Leads</strong> → code patterns used, implementation decisions<br>
+        <strong style="color:#cc88ff">Integration</strong> → DI wiring decisions, audit results<br>
+        <strong style="color:#cc88ff">Test</strong> → what was tested, mock strategies, coverage gaps found<br>
+        <strong style="color:#cc88ff">Lint</strong> → violations found, auto-fixes applied, layer boundary issues<br>
+        <strong style="color:#cc88ff">Build/Deploy</strong> → build configs, signing decisions, deploy targets<br>
+        <strong style="color:#cc88ff">Coordinator</strong> → routing decisions, feedback loop resolutions
+      </div>
+    </div>
+    <div style="background:rgba(220,100,255,.05);border:1px solid rgba(220,100,255,.15);border-radius:12px;padding:16px;flex:1;min-width:280px">
+      <div style="font-size:12px;font-weight:600;color:#dd88ff;margin-bottom:10px">Every Agent Reads (Before Acting)</div>
+      <div style="font-size:11px;color:#997799;line-height:1.8">
+        <strong style="color:#cc88ff">Architect</strong> reads → past mistakes to avoid, established patterns to follow<br>
+        <strong style="color:#cc88ff">Domain Lead</strong> reads → existing entity patterns, naming conventions<br>
+        <strong style="color:#cc88ff">Data Lead</strong> reads → API patterns, DTO conventions, mapper approaches<br>
+        <strong style="color:#cc88ff">Presentation Lead</strong> reads → ViewModel patterns, coordinator conventions<br>
+        <strong style="color:#cc88ff">Test</strong> reads → past test failures, known flaky areas, mock strategies<br>
+        <strong style="color:#cc88ff">Coordinator</strong> reads → past routing decisions for similar tasks<br>
+        <strong style="color:#cc88ff">Product Agent</strong> reads → past feature specs, decomposition patterns<br><br>
+        <em style="color:#886688">Read before act = don't repeat mistakes, stay consistent with established patterns</em>
+      </div>
+    </div>
+  </div>
+
+  <!-- Storage structure -->
+  <div style="margin-top:20px;background:rgba(220,100,255,.04);border:1px solid rgba(220,100,255,.12);border-radius:12px;padding:16px">
+    <div style="font-size:12px;font-weight:600;color:#dd88ff;margin-bottom:10px">Storage Structure (Local)</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <div style="background:rgba(220,100,255,.06);border:1px solid rgba(220,100,255,.1);border-radius:8px;padding:10px;flex:1;min-width:180px">
+        <div style="font-size:11px;font-weight:600;color:#cc88ff;margin-bottom:4px">.pipeline/memory/decisions/</div>
+        <div style="font-size:10px;color:#886688;line-height:1.4">Indexed by agent + timestamp. Queryable: "what did Architect decide about networking?"</div>
+      </div>
+      <div style="background:rgba(220,100,255,.06);border:1px solid rgba(220,100,255,.1);border-radius:8px;padding:10px;flex:1;min-width:180px">
+        <div style="font-size:11px;font-weight:600;color:#cc88ff;margin-bottom:4px">.pipeline/memory/learnings/</div>
+        <div style="font-size:10px;color:#886688;line-height:1.4">Project-specific knowledge. Codebase conventions, team patterns, API quirks discovered during runs.</div>
+      </div>
+      <div style="background:rgba(220,100,255,.06);border:1px solid rgba(220,100,255,.1);border-radius:8px;padding:10px;flex:1;min-width:180px">
+        <div style="font-size:11px;font-weight:600;color:#cc88ff;margin-bottom:4px">.pipeline/memory/mistakes/</div>
+        <div style="font-size:10px;color:#886688;line-height:1.4">What went wrong + how it was fixed + how to prevent it. Agents check this before repeating a similar action.</div>
+      </div>
+      <div style="background:rgba(220,100,255,.06);border:1px solid rgba(220,100,255,.1);border-radius:8px;padding:10px;flex:1;min-width:180px">
+        <div style="font-size:11px;font-weight:600;color:#cc88ff;margin-bottom:4px">.pipeline/memory/patterns/</div>
+        <div style="font-size:10px;color:#886688;line-height:1.4">Established code patterns. "Every ViewModel uses viewModelScope.launch", "Navigation uses type-safe routes." Enforced by future runs.</div>
+      </div>
+    </div>
+    <div style="margin-top:12px;font-size:11px;color:#886688;line-height:1.6;padding:10px;background:rgba(0,0,0,.2);border-radius:8px">
+      <strong style="color:#cc88ff">Persistence:</strong> Stored in <code style="color:#cc88ff">.pipeline/memory/</code> in the project root. Append-only log + indexed for fast queries.
+      Can be committed to git (team shares learnings) or gitignored (personal pipeline memory).
+      Memory is scoped per-project — different projects have different memories.
+      <br><br>
+      <strong style="color:#cc88ff">Querying:</strong> Agents don't read the entire memory. They query with context: <code style="color:#cc88ff">memory.query("networking patterns")</code> or <code style="color:#cc88ff">memory.mistakes("Domain layer")</code>.
+      Returns relevant entries ranked by recency and relevance.
+    </div>
+  </div>
+
+  <!-- Example: Memory in action -->
+  <div style="margin-top:20px;background:rgba(220,100,255,.03);border:1px solid rgba(220,100,255,.1);border-radius:12px;padding:16px">
+    <div style="font-size:12px;font-weight:600;color:#dd88ff;margin-bottom:12px">Example: Memory in Action Over 3 Runs</div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap">
+      <div style="flex:1;min-width:200px">
+        <div style="font-size:11px;font-weight:600;color:#50c878;margin-bottom:6px">Run 1: Build "User Profile"</div>
+        <div style="font-size:10px;color:#668866;line-height:1.6">
+          Architect plans → Domain Lead creates User entity → Data Lead forgets @Serializable on DTO → <strong style="color:#ff8888">Build fails</strong> → Data Lead fixes → Memory writes: <em>"DTOs must have @Serializable annotation"</em>
+        </div>
+      </div>
+      <div style="flex:1;min-width:200px">
+        <div style="font-size:11px;font-weight:600;color:#44aacc;margin-bottom:6px">Run 2: Build "Settings Page"</div>
+        <div style="font-size:10px;color:#668899;line-height:1.6">
+          Data Lead reads memory → sees <em>"DTOs must have @Serializable annotation"</em> → includes annotation from the start → <strong style="color:#50c878">Build passes first time</strong>. Memory writes: <em>"Settings uses SharedPreferences, not API"</em>
+        </div>
+      </div>
+      <div style="flex:1;min-width:200px">
+        <div style="font-size:11px;font-weight:600;color:#aa88ff;margin-bottom:6px">Run 3: Build "Notifications"</div>
+        <div style="font-size:10px;color:#776699;line-height:1.6">
+          Architect reads memory → knows ViewModel pattern, Codable requirement, UserDefaults pattern. Plans accordingly from the start. <strong style="color:#50c878">Zero feedback loops needed.</strong> The pipeline learned.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SECTION: TASK SOURCES (MCP + LOCAL)                     -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section-title">Task Sources — Discovered by Bootstrap (Not Hardcoded)</div>
+
+<p style="font-size:12px;color:#777;margin-bottom:16px;line-height:1.6">Bootstrap discovers what's connected. The pipeline doesn't care which specific tools you use — it works with any MCP-compliant tool in each category.</p>
+
+<div class="grid4">
+  <div class="mcp-card">
+    <h4>Design MCP</h4>
+    <p>Design specs, component trees, assets, spacing/color tokens, screen flows. Feeds into Product Agent for spec decomposition or directly to Presentation Lead for UI implementation.</p>
+    <div class="skills-row"><span class="stag mcp">design-mcp</span><span class="stag ref">design-tokens</span></div>
+  </div>
+  <div class="mcp-card">
+    <h4>Task Tracker MCP</h4>
+    <p>Tickets, stories, epics, acceptance criteria, sprint priorities. Can feed a batch of tasks for parallel execution or sequential sprint planning.</p>
+    <div class="skills-row"><span class="stag mcp">task-mcp</span><span class="stag ref">ticket-parsing</span></div>
+  </div>
+  <div class="mcp-card">
+    <h4>Code Platform MCP</h4>
+    <p>Issues, PR reviews, bug reports, CI failures. Bug reports skip Product Agent and go straight to Code Gen. PR review comments trigger targeted feedback loops.</p>
+    <div class="skills-row"><span class="stag mcp">code-mcp</span><span class="stag ref">issue-parsing</span></div>
+  </div>
+  <div class="mcp-card">
+    <h4>Local Backlog <span style="font-size:10px;color:#886644">(always available)</span></h4>
+    <p>Markdown or JSON task list maintained locally. Zero dependencies — always works. The fallback when no MCPs are connected, or the primary source for solo devs who prefer simplicity.</p>
+    <div class="skills-row"><span class="stag mcp">local-tasks</span><span class="stag ref">backlog.md</span></div>
+  </div>
+</div>
+
+<hr>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SECTION: LEAN COORDINATOR                               -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section-title">Coordinator — Lean Router (Not a Brain)</div>
+
+<div class="card" style="border-color:#7744cc;background:linear-gradient(135deg,#1a1040,#140e30)">
+  <div class="badge" style="background:#7744cc;color:#fff">Lean Router</div>
+  <div class="card-header">
+    <div class="card-name">🔀 Coordinator</div>
+    <div class="card-role">
+      Thin routing layer. Does NOT plan, does NOT make product decisions, does NOT hold complex state.
+      It classifies the incoming task type and routes to the right agent. That's it.
+    </div>
+  </div>
+
+  <div style="font-size:13px;color:#aaa;margin:16px 0 8px;font-weight:600;">What it does (3 things only):</div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap">
+    <div style="flex:1;min-width:200px;background:rgba(119,68,204,.06);border:1px solid rgba(119,68,204,.15);border-radius:10px;padding:14px">
+      <div style="font-size:12px;font-weight:600;color:#9977cc;margin-bottom:4px">1. Classify Task Type</div>
+      <div style="font-size:11px;color:#776699;line-height:1.5">New feature? Bug fix? Refactor? Design impl? Dependency update? Sprint batch? Determines which path to take.</div>
+    </div>
+    <div style="flex:1;min-width:200px;background:rgba(119,68,204,.06);border:1px solid rgba(119,68,204,.15);border-radius:10px;padding:14px">
+      <div style="font-size:12px;font-weight:600;color:#9977cc;margin-bottom:4px">2. Route to Agent</div>
+      <div style="font-size:11px;color:#776699;line-height:1.5">Sends to Product Agent (needs planning), Code Gen (clear task), Build/Deploy (infra task), or Git (repo task). One hop.</div>
+    </div>
+    <div style="flex:1;min-width:200px;background:rgba(119,68,204,.06);border:1px solid rgba(119,68,204,.15);border-radius:10px;padding:14px">
+      <div style="font-size:12px;font-weight:600;color:#9977cc;margin-bottom:4px">3. Handle Feedback</div>
+      <div style="font-size:11px;color:#776699;line-height:1.5">When downstream agents report failures, routes the failure + context to the right fixer. Doesn't decide how to fix — just routes.</div>
+    </div>
+  </div>
+
+  <div class="skills-row"><span class="stag">task-classification</span><span class="stag">agent-routing</span><span class="stag">failure-routing</span></div>
+</div>
+
+<hr>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SECTION: TASK TYPES + ROUTING                           -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section-title">Task Type Routing — What Goes Where</div>
+
+<div class="grid3">
+  <div class="tt">
+    <h4>🆕 New Feature</h4>
+    <div class="trigger">Triggers: "Add user profile", "Build payment flow", design MCP link, task tracker epic</div>
+    <div class="path">
+      → Product Agent (spec + decompose)<br>
+      → Scaffold (if new project)<br>
+      → Code Gen (full team)<br>
+      → Test ‖ Lint → Build → Deploy → Git
+    </div>
+  </div>
+  <div class="tt">
+    <h4>🐛 Bug Fix</h4>
+    <div class="trigger">Triggers: Code platform issue, crash report, "fix the login crash"</div>
+    <div class="path">
+      → Code Gen (targeted layer lead only)<br>
+      → Test ‖ Lint → Git<br>
+      <span class="skip">Skip: Product Agent, Scaffold, Build, Deploy</span>
+    </div>
+  </div>
+  <div class="tt">
+    <h4>🔄 Refactor</h4>
+    <div class="trigger">Triggers: "Refactor networking layer", "Extract protocol", tech debt ticket</div>
+    <div class="path">
+      → Code Gen (Architect re-plans → affected leads)<br>
+      → Test ‖ Lint → Git<br>
+      <span class="skip">Skip: Product Agent, Scaffold, Build, Deploy</span>
+    </div>
+  </div>
+  <div class="tt">
+    <h4>🎨 Design Implementation</h4>
+    <div class="trigger">Triggers: Design MCP link, "implement this design", UI ticket</div>
+    <div class="path">
+      → Product Agent (decompose screens)<br>
+      → Code Gen (Presentation Lead primary, Data Lead if API needed)<br>
+      → Test ‖ Lint → Git
+    </div>
+  </div>
+  <div class="tt">
+    <h4>📦 Sprint Batch</h4>
+    <div class="trigger">Triggers: Task tracker sprint, "do these 5 tickets", local backlog batch</div>
+    <div class="path">
+      → Product Agent (prioritize + dependency graph)<br>
+      → Parallel Code Gen teams per task<br>
+      → Per-task: Test ‖ Lint → Git<br>
+      <span style="color:#50c878;font-size:10px;">Independent tasks run in parallel</span>
+    </div>
+  </div>
+  <div class="tt">
+    <h4>📐 Dependency / Config Update</h4>
+    <div class="trigger">Triggers: "Update Retrofit", "Add Room", Gradle change</div>
+    <div class="path">
+      → Build Agent (update deps)<br>
+      → Test (verify nothing broke)<br>
+      → Git<br>
+      <span class="skip">Skip: Product, Scaffold, Code Gen, Lint, Deploy</span>
+    </div>
+  </div>
+  <div class="tt">
+    <h4>💬 PR Review Response</h4>
+    <div class="trigger">Triggers: PR comments, code review feedback</div>
+    <div class="path">
+      → Code Gen (targeted layer leads)<br>
+      → Test ‖ Lint → Git (amend/push)<br>
+      <span class="skip">Skip: Product, Scaffold, Build, Deploy</span>
+    </div>
+  </div>
+  <div class="tt">
+    <h4>🚀 Release / Deploy Only</h4>
+    <div class="trigger">Triggers: "Ship to Play Console", "Firebase App Distribution"</div>
+    <div class="path">
+      → Build → Deploy → Git (tag)<br>
+      <span class="skip">Skip: Everything else</span>
+    </div>
+  </div>
+  <div class="tt">
+    <h4>🧪 Test-Only Pass</h4>
+    <div class="trigger">Triggers: "Run tests", "Check coverage", CI verification</div>
+    <div class="path">
+      → Test Agent only<br>
+      <span class="skip">Skip: Everything else</span>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SECTION: PRODUCT AGENT                                  -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section-title">Product Agent — The Product Mind</div>
+
+<div class="card" style="border-color:#ff6688;background:linear-gradient(135deg,#1a0a10,#140810);border-style:dashed">
+  <div class="badge" style="background:#ff6688;color:#fff">Conditional Agent</div>
+  <div class="card-header">
+    <div class="card-name">📋 Product Agent</div>
+    <div class="card-role">
+      Invoked when a task needs product-level thinking before engineering starts. Thinks like a solo dev's product manager / tech lead. Decomposes features into implementable tasks, writes specs, prioritizes, creates the task graph. Not invoked for bug fixes, refactors, or simple tasks.
+    </div>
+  </div>
+
+  <div class="skills-row">
+    <span class="stag">product-planning</span>
+    <span class="stag">task-decomposition</span>
+    <span class="stag">spec-writing</span>
+    <span class="stag">research</span>
+    <span class="stag mcp">discovered-mcps (via bootstrap)</span>
+    <span class="stag ref">refs/product-spec-template.md</span>
+    <span class="stag ref">refs/user-story-format.md</span>
+  </div>
+
+  <div style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap">
+    <div class="sub" style="border-color:rgba(255,102,136,.2)">
+      <div class="sb" style="background:rgba(255,102,136,.15);color:#ff6688">Capability</div>
+      <div class="sub-name">Feature Decomposition</div>
+      <div class="sub-desc">Breaks "Add user profile" into: domain entities, API endpoints needed, screens, navigation flows, edge cases, error states. Outputs a task list with dependencies.</div>
+    </div>
+    <div class="sub" style="border-color:rgba(255,102,136,.2)">
+      <div class="sb" style="background:rgba(255,102,136,.15);color:#ff6688">Capability</div>
+      <div class="sub-name">Spec Writing</div>
+      <div class="sub-desc">Produces acceptance criteria, API contracts (if known), screen-by-screen behavior specs, and edge case handling. Enough detail for Code Gen's Architect to plan from.</div>
+    </div>
+    <div class="sub" style="border-color:rgba(255,102,136,.2)">
+      <div class="sb" style="background:rgba(255,102,136,.15);color:#ff6688">Capability</div>
+      <div class="sub-name">Task Graph + Prioritization</div>
+      <div class="sub-desc">For sprint batches: determines which tasks are independent (parallel) vs dependent (serial). Builds a DAG (directed acyclic graph) of task execution order.</div>
+    </div>
+    <div class="sub" style="border-color:rgba(255,102,136,.2)">
+      <div class="sb" style="background:rgba(255,102,136,.15);color:#ff6688">Capability</div>
+      <div class="sub-name">Design Integration</div>
+      <div class="sub-desc">Reads design MCP output (whatever is connected): extracts components, spacing, colors, navigation flows. Maps design components to code components (which Views, which ViewModels).</div>
+    </div>
+    <div class="sub" style="border-color:rgba(255,102,136,.2)">
+      <div class="sb" style="background:rgba(255,102,136,.15);color:#ff6688">Capability</div>
+      <div class="sub-name">Research</div>
+      <div class="sub-desc">Researches best practices, competitor apps, design patterns, Material Design 3 guidelines, API documentation before spec writing. Uses web search MCP + design tool MCPs to gather context.</div>
+    </div>
+  </div>
+
+  <!-- Design Capability -->
+  <div style="margin-top:20px;background:rgba(255,102,136,.04);border:1px solid rgba(255,102,136,.15);border-radius:14px;padding:20px">
+    <div style="font-size:13px;font-weight:600;color:#ff6688;margin-bottom:6px">Design Capability</div>
+    <p style="font-size:11px;color:#886666;margin-bottom:14px;line-height:1.6">For solo devs without a designer: Claude generates UI wireframes, component layouts, color palettes, and design specs natively (HTML/React/SVG artifacts). Product Agent describes screens + writes visual specs, Presentation Lead implements in Jetpack Compose. If a design MCP is connected, Bootstrap already discovers and configures it — no extra setup here.</p>
+  </div>
+
+  <div class="bp" style="margin-top:16px">
+    <strong>Product Agent outputs (fed to Code Gen):</strong><br>
+    <code>spec.md</code> — Feature spec with acceptance criteria, screens, API contracts<br>
+    <code>task-graph.json</code> — Tasks with dependencies, parallel groups, priorities<br>
+    <code>design-map.md</code> — Design components → code components mapping (from any design MCP)<br>
+    <code>design-tokens.json</code> — Colors, typography, spacing extracted from design plugins<br>
+    <code>edge-cases.md</code> — Error states, loading states, empty states, offline behavior<br>
+    <code>research-notes.md</code> — Competitive analysis, best practices, HIG references gathered during research
+  </div>
+
+  <!-- Product Agent Documentation -->
+  <div style="margin-top:12px;padding:10px 12px;background:rgba(204,136,255,.06);border:1px solid rgba(204,136,255,.12);border-radius:8px;font-size:11px;color:#aa88cc;line-height:1.5">
+    <strong style="color:#cc88ff">Documents:</strong> Writes a <strong>Product Spec Record</strong> — <code style="color:#cc88ff">docs/specs/SPEC-NNN-feature-name.md</code> — capturing requirements, acceptance criteria, task decomposition rationale, and design decisions. Also indexes specs into Pipeline Memory so future tasks can reference past product decisions and decomposition patterns.
+  </div>
+
+  <!-- Review Gate -->
+  <div style="margin-top:16px;background:rgba(255,200,50,.06);border:2px solid rgba(255,200,50,.25);border-radius:14px;padding:18px">
+    <div style="font-size:13px;font-weight:700;color:#ffcc44;margin-bottom:8px">⏸ Review Gate — Developer Reviews Before Engineering Starts</div>
+    <div style="font-size:11px;color:#998855;line-height:1.6;margin-bottom:12px">
+      After the Product Agent produces its output, the pipeline <strong style="color:#ffcc44">pauses for developer review</strong>. The developer sees the spec, task graph, design map, and edge cases — and can approve, edit, or reject before Code Gen touches anything.
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <div style="background:rgba(80,200,120,.04);border:1px solid rgba(80,200,120,.15);border-radius:8px;padding:10px;flex:1;min-width:160px">
+        <div style="font-size:11px;font-weight:600;color:#50c878;margin-bottom:3px">✓ Approve</div>
+        <div style="font-size:10px;color:#668866">Spec looks good → pipeline continues to Code Gen</div>
+      </div>
+      <div style="background:rgba(255,200,50,.04);border:1px solid rgba(255,200,50,.15);border-radius:8px;padding:10px;flex:1;min-width:160px">
+        <div style="font-size:11px;font-weight:600;color:#ffcc44;margin-bottom:3px">✏ Edit</div>
+        <div style="font-size:10px;color:#888855">Developer modifies spec, adds/removes tasks, adjusts priorities → Product Agent incorporates changes</div>
+      </div>
+      <div style="background:rgba(255,100,100,.04);border:1px solid rgba(255,100,100,.15);border-radius:8px;padding:10px;flex:1;min-width:160px">
+        <div style="font-size:11px;font-weight:600;color:#ff8888;margin-bottom:3px">✗ Reject</div>
+        <div style="font-size:10px;color:#886666">Completely wrong direction → Product Agent re-researches and re-plans from scratch</div>
+      </div>
+      <div style="background:rgba(85,85,255,.04);border:1px solid rgba(85,85,255,.15);border-radius:8px;padding:10px;flex:1;min-width:160px">
+        <div style="font-size:11px;font-weight:600;color:#8888ff;margin-bottom:3px">⏩ Auto-approve</div>
+        <div style="font-size:10px;color:#666688">Configurable in Bootstrap: skip review for bug fixes, small tasks, or trusted specs. <code style="color:#8888ff;font-size:9px">review_gate: "always" | "manual" | "auto"</code></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="decision" style="margin-top:16px">
+    <div class="decision-d"><span>?</span></div>
+    <p>
+      <strong>When is Product Agent invoked?</strong><br>
+      New features, design implementations, sprint batches, or any task where the scope is ambiguous.<br>
+      <strong>When is it skipped?</strong><br>
+      Bug fixes (scope is clear), refactors (Architect handles it), dependency updates, PR reviews, releases, test runs.
+    </p>
+  </div>
+</div>
+
+<hr>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SECTION: SCAFFOLD (CONDITIONAL)                         -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section-title">Scaffold Agent (New Projects Only)</div>
+<div class="card" style="border-style:dashed;border-color:#444466">
+  <div class="badge" style="background:#444466;color:#aaa">Conditional</div>
+  <div class="card-header">
+    <div class="card-name">🏗️ Scaffold Agent</div>
+    <div class="card-role">Only for new projects. Creates folder structure (domain/, data/, presentation/, app/di/), build.gradle.kts files, base Hilt modules, MaterialTheme, Navigation setup. Skipped for existing codebases.</div>
+  </div>
+  <div class="skills-row">
+    <span class="stag">android-project-scaffold</span>
+    <span class="stag ref">refs/clean-arch-folder-layout.md</span>
+    <span class="stag ref">refs/gradle-common-deps.md</span>
+  </div>
+</div>
+
+<hr>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SECTION: CODE GEN ENGINEERING TEAM                      -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section-title">Code Gen Agent — Engineering Team</div>
+
+<div class="card" style="border-color:#cc8800;background:linear-gradient(135deg,#1a1508,#14120a);border-left:4px solid #ff6666">
+  <div class="badge" style="background:#cc8800;color:#fff">Engineering Team</div>
+  <div class="card-header">
+    <div class="card-name">⚙️ Code Gen Agent</div>
+    <div class="card-role">Structured engineering team. Architect plans Clean Architecture before code. Senior Leads implement per layer. Staff Integration wires DI and audits separation. Receives Product Agent's spec (if available) or works from user input directly.</div>
+  </div>
+  <div class="skills-row">
+    <span class="stag">android-code-gen</span>
+    <span class="stag mcp">web-search-mcp</span>
+    <span class="stag ref">refs/clean-architecture.md</span>
+    <span class="stag ref">refs/kotlin-style-guide.md</span>
+    <span class="stag ref">refs/compose-patterns.md</span>
+    <span class="stag ref">refs/navigation-compose.md</span>
+    <span class="stag ref">refs/hilt-di-patterns.md</span>
+    <span class="stag ref">refs/repository-pattern.md</span>
+  </div>
+
+  <!-- Phase 1 -->
+  <div class="phase" style="border-color:rgba(204,136,0,.3);margin-top:20px">
+    <div class="phase-b" style="color:#cc8800">Phase 1 — Architect (Principal) + Research</div>
+    <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap">
+      <div class="sub" style="flex:1;min-width:100%;border-color:rgba(204,136,0,.2)">
+        <div class="sb sb-p">Principal</div>
+        <div class="sub-name">Architect Sub-Agent</div>
+        <div class="sub-desc">
+          <strong style="color:#cc8800">Researches first</strong> — looks up Kotlin/Android best practices, API documentation, similar implementations, Material Design 3 guidelines via web search MCP. Then reads Product Agent's spec (or user input). Produces the blueprint: interface contracts between all layers, dependency graph, file plan, error types, Navigation Compose graph. <strong style="color:#cc8800">No code is written until this completes.</strong>
+          <div style="margin-top:8px;padding:8px 10px;background:rgba(204,136,0,.06);border:1px solid rgba(204,136,0,.12);border-radius:6px;font-size:11px;color:#aa8844;line-height:1.5">
+            <strong style="color:#cc8800">Documents:</strong> Writes an <strong>ADR</strong> (Architecture Decision Record) — <code style="color:#cc8800">docs/decisions/ADR-NNN.md</code> — explaining what was decided and why. Also indexes decisions into Pipeline Memory for future agent reference.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 2 -->
+  <div class="phase" style="border-color:rgba(255,102,136,.3);margin-top:16px">
+    <div class="phase-b" style="color:#ff6688">Phase 2 — Domain Layer (Senior)</div>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <div class="sub" style="border-color:rgba(255,102,136,.2)">
+        <div class="sb sb-s">Senior</div>
+        <div class="sub-name">Domain Lead</div>
+        <div class="sub-desc">
+          <strong style="color:#ff6688">Entities</strong> (pure data class, no Android imports) | <strong style="color:#ff6688">Use Cases</strong> (business logic) | <strong style="color:#ff6688">Repository Interfaces</strong> (abstract) | <strong style="color:#ff6688">Domain Errors</strong><br>
+          <span style="color:#775555;font-size:11px">Rule: Zero imports of Android SDK, Jetpack, or external frameworks. Pure Kotlin.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 3 -->
+  <div class="par" style="margin-top:16px">
+    <div class="par-badge">Phase 3 — Data ‖ Presentation (Parallel)</div>
+    <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap">
+      <div class="sub" style="border-color:rgba(68,170,204,.2)">
+        <div class="sb sb-s">Senior</div>
+        <div class="sub-name">Data Lead</div>
+        <div class="sub-desc"><strong style="color:#44aacc">DTOs</strong> (@Serializable) | <strong style="color:#44aacc">Mappers</strong> (DTO↔Entity) | <strong style="color:#44aacc">Repo Impls</strong> | <strong style="color:#44aacc">Retrofit Service</strong> | <strong style="color:#44aacc">Room DAOs + Entities</strong></div>
+      </div>
+      <div class="sub" style="border-color:rgba(170,119,255,.2)">
+        <div class="sb sb-s">Senior</div>
+        <div class="sub-name">Presentation Lead</div>
+        <div class="sub-desc"><strong style="color:#aa77ff">ViewModels</strong> (@HiltViewModel) | <strong style="color:#aa77ff">Compose Screens</strong> | <strong style="color:#aa77ff">Navigation Routes</strong> | <strong style="color:#aa77ff">UiState</strong> sealed classes</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 4 -->
+  <div class="phase" style="border-color:rgba(85,170,85,.3);margin-top:16px">
+    <div class="phase-b" style="color:#55aa55">Phase 4 — Integration (Staff)</div>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <div class="sub" style="flex:1;min-width:100%;border-color:rgba(85,170,85,.2)">
+        <div class="sb sb-st">Staff</div>
+        <div class="sub-name">Integration Sub-Agent</div>
+        <div class="sub-desc"><strong style="color:#55aa55">Hilt Modules</strong> | <strong style="color:#55aa55">NavHost Setup</strong> | <strong style="color:#55aa55">Separation Audit</strong> (no layer violations) | <strong style="color:#55aa55">Testability Check</strong> (all deps @Inject-able)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fb-section">
+    <div class="fb-label">Receives Feedback From</div>
+    <div class="fb-item"><span class="fb-arrow">↩</span><span class="fb-trigger">Test failure</span> → <span class="fb-target">specific layer lead</span> (VM fail → Presentation, repo fail → Data)</div>
+    <div class="fb-item"><span class="fb-arrow">↩</span><span class="fb-trigger">Lint layer violation (detekt)</span> → <span class="fb-target">Architect re-plans</span> + affected lead</div>
+    <div class="fb-item"><span class="fb-arrow">↩</span><span class="fb-trigger">Build compile error</span> → <span class="fb-target">Integration</span> (wiring) or <span class="fb-target">layer lead</span> (type)</div>
+    <div class="fb-item"><span class="fb-arrow">↩</span><span class="fb-trigger">DI audit fail</span> → <span class="fb-target">Architect</span> (re-plan protocol)</div>
+  </div>
+</div>
+
+<hr>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SECTION: QUALITY, BUILD, DEPLOY, GIT                    -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section-title">Quality, Build, Deploy, Git</div>
+
+<div class="grid2">
+  <div class="card" style="border-style:dashed;border-color:#444488">
+    <div class="badge" style="background:#5555ff;color:#fff">Configurable Agent</div>
+    <div class="card-header">
+      <div class="card-name">🧪 Test Agent <span style="font-size:12px;color:#888;font-weight:400">(always / never / per-task)</span></div>
+      <div class="card-role">Layer-aware testing. Mocks Use Cases for VM tests, mocks network for repo tests. Domain tests need no mocks. <strong style="color:#ffcc44">Can be turned off</strong> for prototyping, hackathons, or early exploration where speed matters more than coverage.</div>
+    </div>
+    <div class="skills-row"><span class="stag">android-testing</span><span class="stag ref">refs/junit5-patterns.md</span><span class="stag ref">refs/mockk-generation.md</span></div>
+    <div class="par">
+      <div class="par-badge">Parallel Subs</div>
+      <div style="display:flex;gap:10px;margin-top:4px">
+        <div class="sub"><div class="sb sb-sub">Sub</div><div class="sub-name">Unit Test Gen</div><div class="sub-desc">Domain + Data + Presentation layer tests</div></div>
+        <div class="sub"><div class="sb sb-sub">Sub</div><div class="sub-name">UI Test Gen</div><div class="sub-desc">Navigation flow tests, Espresso + Compose Testing</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="badge" style="background:#5555ff;color:#fff">Agent</div>
+    <div class="card-header">
+      <div class="card-name">✨ Lint Agent</div>
+      <div class="card-role">Self-healing + layer boundary enforcement. Verifies Domain has zero framework imports, Presentation doesn't import Data.</div>
+    </div>
+    <div class="skills-row"><span class="stag">android-lint-format</span><span class="stag ref">refs/ktlint-rules.md</span><span class="stag ref">refs/layer-import-rules.md</span></div>
+    <div style="background:rgba(80,200,120,.04);border:1px solid rgba(80,200,120,.15);border-radius:10px;padding:12px;font-size:12px;color:#88aa88;line-height:1.6;margin-top:12px">
+      ktlint → detekt → auto-fix → re-lint → layer boundary check → pass or escalate
+    </div>
+  </div>
+</div>
+
+<div class="grid3" style="margin-top:20px">
+  <div class="card">
+    <div class="badge" style="background:#5555ff;color:#fff">Agent</div>
+    <div class="card-name" style="font-size:17px">🔨 Build</div>
+    <div class="card-role">gradlew + Signing config</div>
+    <div class="skills-row"><span class="stag">android-build</span><span class="stag ref">refs/signing-config.md</span></div>
+  </div>
+  <div class="card" style="border-style:dashed;border-color:#444466">
+    <div class="badge" style="background:#444466;color:#aaa">Configurable</div>
+    <div class="card-name" style="font-size:17px">🚀 Deploy <span style="font-size:11px;color:#888;font-weight:400">(always / never / per-task)</span></div>
+    <div class="card-role">Fastlane, Google Play Console, Firebase App Distribution. <strong style="color:#ffcc44">Often off</strong> for personal projects, libraries, and local-only builds where there's no deployment target.</div>
+    <div class="skills-row"><span class="stag">android-deploy</span><span class="stag ref">refs/play-publish-setup.md</span></div>
+  </div>
+  <div class="card">
+    <div class="badge" style="background:#5555ff;color:#fff">Agent</div>
+    <div class="card-name" style="font-size:17px">📦 Git</div>
+    <div class="card-role">Branches, commits, PRs. Platform-agnostic.</div>
+    <div class="skills-row"><span class="stag">git-workflow</span><span class="stag ref">refs/conventional-commits.md</span><span class="stag ref">refs/pr-templates.md</span></div>
+    <div style="margin-top:10px;background:rgba(255,200,50,.06);border:2px solid rgba(255,200,50,.2);border-radius:8px;padding:10px;font-size:11px;color:#998855;line-height:1.5">
+      <strong style="color:#ffcc44">⏸ Human Review Gate:</strong> Git Agent creates the branch, commits, and opens a PR — but does <strong>not</strong> merge. The developer reviews the PR (code diff, test results) and merges manually. Pipeline stops here until human approval. Auto-merge can be enabled in Bootstrap config for trusted pipelines: <code style="color:#ffcc44;font-size:10px">git_auto_merge: false | true</code>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SECTION: SPRINT BATCH / PARALLEL TASKS                  -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section-title">Sprint Batch Execution — Parallel Task Handling</div>
+
+<div style="background:linear-gradient(135deg,#0a1210,#081410);border:1px solid rgba(80,200,120,.2);border-radius:18px;padding:28px">
+  <div style="font-size:15px;font-weight:600;color:#50c878;margin-bottom:16px">Example: 5 tickets in a sprint</div>
+
+  <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:14px">
+    <div style="width:28px;height:28px;background:rgba(255,102,136,.15);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#ff6688;font-weight:700;font-size:12px">1</div>
+    <div>
+      <div style="font-size:13px;font-weight:600;color:#ff6688">Product Agent builds the task graph</div>
+      <div style="font-size:12px;color:#886666;margin-top:3px">Reads all 5 tickets. Identifies: Task A and B are independent. Task C depends on A. Task D and E are independent. Outputs a DAG.</div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:14px">
+    <div style="width:28px;height:28px;background:rgba(80,200,120,.15);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#50c878;font-weight:700;font-size:12px">2</div>
+    <div>
+      <div style="font-size:13px;font-weight:600;color:#50c878">Parallel execution wave 1</div>
+      <div style="font-size:12px;color:#668866;margin-top:3px">
+        Tasks A, B, D, E each get their own Code Gen team running in parallel (as sub-agents).<br>
+        Each follows: Architect → Domain → Data ‖ Presentation → Integration → Test ‖ Lint → Git
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:16px;align-items:flex-start">
+    <div style="width:28px;height:28px;background:rgba(85,85,255,.15);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#8888ff;font-weight:700;font-size:12px">3</div>
+    <div>
+      <div style="font-size:13px;font-weight:600;color:#8888ff">Sequential: Task C after A completes</div>
+      <div style="font-size:12px;color:#666688;margin-top:3px">C depends on A's output (e.g., shared model). Waits for A to finish, then runs its own full pipeline. Coordinator manages this sequencing.</div>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SECTION: FEEDBACK LOOPS                                 -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section-title">Feedback Loops — Targeted Recovery</div>
+
+<div class="fbd">
+  <div class="fbd-title">All feedback routes through the lean Coordinator to the specific agent/sub-agent that owns the fix</div>
+  <div class="fbl"><div class="fbl-n">1</div><div><div class="fbl-d"><strong>ViewModel test fails</strong></div><div class="fbl-p">Test → Coordinator → Code Gen → Presentation Lead</div></div></div>
+  <div class="fbl"><div class="fbl-n">2</div><div><div class="fbl-d"><strong>Repository test fails</strong></div><div class="fbl-p">Test → Coordinator → Code Gen → Data Lead</div></div></div>
+  <div class="fbl"><div class="fbl-n">3</div><div><div class="fbl-d"><strong>Use Case test fails</strong></div><div class="fbl-p">Test → Coordinator → Code Gen → Domain Lead</div></div></div>
+  <div class="fbl"><div class="fbl-n">4</div><div><div class="fbl-d"><strong>Layer boundary violation (detekt)</strong></div><div class="fbl-p">Lint → Coordinator → Code Gen → Architect + affected lead</div></div></div>
+  <div class="fbl"><div class="fbl-n">5</div><div><div class="fbl-d"><strong>Lint auto-fixable (ktlint)</strong></div><div class="fbl-p">Lint → self-heal → re-lint → pass (no escalation)</div></div></div>
+  <div class="fbl"><div class="fbl-n">6</div><div><div class="fbl-d"><strong>Compile error</strong></div><div class="fbl-p">Build → Coordinator → Code Gen → Integration (wiring) or layer lead (type)</div></div></div>
+  <div class="fbl"><div class="fbl-n">7</div><div><div class="fbl-d"><strong>Hilt module missing binding</strong></div><div class="fbl-p">Integration → Architect (re-plan) → affected lead (add @Provides)</div></div></div>
+  <div class="fbl"><div class="fbl-n">8</div><div><div class="fbl-d"><strong>Deploy failure (Play Console)</strong></div><div class="fbl-p">Deploy → Coordinator → Build (re-assemble)</div></div></div>
+  <div class="fbl"><div class="fbl-n">9</div><div><div class="fbl-d"><strong>PR review comments</strong></div><div class="fbl-p">Git → Coordinator → Code Gen (targeted) → Test ‖ Lint → Git (amend)</div></div></div>
+  <div class="fbl"><div class="fbl-n">10</div><div><div class="fbl-d"><strong>Product spec unclear / incomplete</strong></div><div class="fbl-p">Code Gen Architect → Coordinator → Product Agent (clarify spec) → back to Architect</div></div></div>
+</div>
+
+<hr>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SECTION: RESEARCH CAPABILITY                            -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section-title">Research Capability — Cross-Cutting</div>
+
+<div style="background:linear-gradient(135deg,#0f1a10,#0c160e);border:1.5px solid rgba(100,200,100,.25);border-radius:18px;padding:28px;margin-bottom:20px">
+  <div style="font-size:18px;font-weight:700;color:#88cc88;margin-bottom:6px">🔍 Research is not a separate agent — it's a capability built into Product, Architect, and Presentation Lead</div>
+  <div style="font-size:13px;color:#668866;margin-bottom:20px;line-height:1.6">
+    Before writing specs, before planning architecture, before designing UI — these agents research first. They use web search MCP, documentation lookups, and design tool MCPs to gather context. This ensures decisions are informed, not guessed.
+  </div>
+
+  <div style="display:flex;gap:14px;flex-wrap:wrap">
+    <div style="background:rgba(255,102,136,.04);border:1px solid rgba(255,102,136,.15);border-radius:12px;padding:16px;flex:1;min-width:220px">
+      <div style="font-size:13px;font-weight:600;color:#ff6688;margin-bottom:8px">Product Agent Researches</div>
+      <div style="font-size:11px;color:#886666;line-height:1.6">
+        → Competitor apps (how do others solve this?)<br>
+        → Design patterns (Material Design 3, common UX flows)<br>
+        → API documentation (if integrating third-party services)<br>
+        → Best practices for the feature type (onboarding, payments, notifications)<br>
+        → Existing design systems (reverse-engineer competitor apps)
+      </div>
+      <div style="margin-top:8px"><span class="stag mcp" style="font-size:9px">web-search</span> <span class="stag mcp" style="font-size:9px">design-mcp</span></div>
+    </div>
+    <div style="background:rgba(204,136,0,.04);border:1px solid rgba(204,136,0,.15);border-radius:12px;padding:16px;flex:1;min-width:220px">
+      <div style="font-size:13px;font-weight:600;color:#cc8800;margin-bottom:8px">Architect (Tech) Researches</div>
+      <div style="font-size:11px;color:#886644;line-height:1.6">
+        → Kotlin/Android best practices for specific patterns<br>
+        → Library documentation (Retrofit, Room, Coroutines, etc.)<br>
+        → Architecture approaches (how others structure similar features)<br>
+        → Android Jetpack docs (latest APIs, deprecations, new patterns)<br>
+        → Performance considerations, memory management approaches
+      </div>
+      <div style="margin-top:8px"><span class="stag mcp" style="font-size:9px">web-search-mcp</span> <span class="stag ref" style="font-size:9px">android-jetpack-docs</span></div>
+    </div>
+    <div style="background:rgba(170,119,255,.04);border:1px solid rgba(170,119,255,.15);border-radius:12px;padding:16px;flex:1;min-width:220px">
+      <div style="font-size:13px;font-weight:600;color:#aa77ff;margin-bottom:8px">Presentation Lead (Design) Researches</div>
+      <div style="font-size:11px;color:#776699;line-height:1.6">
+        → Material Design 3 guidelines for the specific UI pattern<br>
+        → Jetpack Compose component patterns and modifiers<br>
+        → Accessibility best practices (TalkBack, font scaling)<br>
+        → Design tokens from connected design MCP<br>
+        → Icon/asset search, color palettes via Claude plugins
+      </div>
+      <div style="margin-top:8px"><span class="stag mcp" style="font-size:9px">web-search</span> <span class="stag mcp" style="font-size:9px">design-mcp</span> <span class="stag mcp" style="font-size:9px">claude-plugins</span></div>
+    </div>
+  </div>
+
+  <div style="margin-top:16px;font-size:11px;color:#558855;line-height:1.6;padding:12px;background:rgba(100,200,100,.04);border-radius:8px">
+    <strong style="color:#88cc88">Research findings go to Pipeline Memory.</strong> Once an agent researches something (e.g., "Material Design 3 says bottom nav should have 3-5 items"), that finding is stored in memory so no other agent needs to look it up again. Research compounds across runs.
+  </div>
+</div>
+
+<hr>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SECTION: SUMMARY TABLE                                  -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section-title">Full Agent Summary</div>
+
+<table class="st">
+  <thead><tr><th>Agent</th><th>Level</th><th>Skills / MCPs</th><th>Sub-Agents</th><th>Parallel?</th><th>Invoked When</th><th>Feedback</th></tr></thead>
+  <tbody>
+    <tr style="background:rgba(0,210,180,.03)">
+      <td><strong>Bootstrap</strong></td><td><span class="tag t-boot">Setup</span></td>
+      <td class="mono">bootstrap-setup, mcp-discovery, spec-quality-check</td><td class="no">None</td>
+      <td class="no">No</td><td>Once per session / new project</td><td class="no">Writes to Memory</td>
+    </tr>
+    <tr style="background:rgba(220,100,255,.03)">
+      <td><strong>Pipeline Memory</strong></td><td><span class="tag t-mem">Store</span></td>
+      <td class="mono">memory-store, memory-query, memory-index</td><td class="no">None</td>
+      <td class="no">Always (passive)</td><td>All agents read/write</td><td class="fbc">Receives + provides context to all agents</td>
+    </tr>
+    <tr>
+      <td><strong>Coordinator</strong></td><td><span class="tag t-a">Router</span></td>
+      <td class="mono">task-classification, routing</td><td class="no">None (spawns others)</td>
+      <td class="yes">Spawns parallel tasks</td><td>Always (entry point)</td><td class="fbc">Routes all failures</td>
+    </tr>
+    <tr>
+      <td><strong>Product Agent</strong></td><td><span class="tag t-prod">Product</span></td>
+      <td class="mono">product-planning, spec-writing <span class="tag t-mcp">task-mcp</span> <span class="tag t-mcp">design-mcp</span></td>
+      <td class="no">None</td><td class="no">No</td>
+      <td>New features, designs, sprints</td><td class="fbc">← Architect (unclear spec)</td>
+    </tr>
+    <tr>
+      <td><strong>Scaffold</strong></td><td><span class="tag t-cond">Conditional</span></td>
+      <td class="mono">android-project-scaffold</td><td class="no">None</td><td class="no">No</td>
+      <td>New projects only</td><td class="no">None</td>
+    </tr>
+    <tr><td colspan="7" style="padding:4px 14px;font-size:11px;color:#666">Code Gen Engineering Team:</td></tr>
+    <tr style="background:rgba(204,136,0,.02)">
+      <td style="padding-left:24px;color:#aa8844">↳ Architect</td><td><span class="tag t-p">Principal</span></td>
+      <td class="mono">clean-architecture, hilt-di</td><td class="no">None</td><td class="no">Phase 1</td>
+      <td>Always (within Code Gen)</td><td class="fbc">← Integration audit, ← Product</td>
+    </tr>
+    <tr style="background:rgba(255,102,136,.02)">
+      <td style="padding-left:24px;color:#ff6688">↳ Domain Lead</td><td><span class="tag t-sr">Senior</span></td>
+      <td class="mono">entities, use-cases, repo-interfaces</td><td class="no">None</td><td class="no">Phase 2</td>
+      <td>After Architect</td><td class="fbc">← Test (use case fails)</td>
+    </tr>
+    <tr style="background:rgba(68,170,204,.02)">
+      <td style="padding-left:24px;color:#44aacc">↳ Data Lead</td><td><span class="tag t-sr">Senior</span></td>
+      <td class="mono">dtos, mappers, retrofit, room, repos</td><td class="no">None</td><td class="yes">Phase 3 ‖ Pres</td>
+      <td>After Domain</td><td class="fbc">← Test (repo fails)</td>
+    </tr>
+    <tr style="background:rgba(170,119,255,.02)">
+      <td style="padding-left:24px;color:#aa77ff">↳ Presentation Lead</td><td><span class="tag t-sr">Senior</span></td>
+      <td class="mono">viewmodels, compose-screens, navigation</td><td class="no">None</td><td class="yes">Phase 3 ‖ Data</td>
+      <td>After Domain</td><td class="fbc">← Test (VM fails)</td>
+    </tr>
+    <tr style="background:rgba(85,170,85,.02)">
+      <td style="padding-left:24px;color:#55aa55">↳ Integration</td><td><span class="tag t-st">Staff</span></td>
+      <td class="mono">hilt-modules, navhost, audit</td><td class="no">None</td><td class="no">Phase 4</td>
+      <td>After Data + Pres</td><td class="fbc">← Build, → Architect</td>
+    </tr>
+    <tr>
+      <td><strong>Test</strong></td><td><span class="tag t-cond">Configurable</span></td>
+      <td class="mono">android-testing</td><td><span class="tag t-sub">Unit</span> <span class="tag t-sub">UI</span></td>
+      <td class="yes">‖ Lint + internal ‖</td><td>always / never / per-task</td><td class="fbc">→ Code Gen (layer)</td>
+    </tr>
+    <tr>
+      <td><strong>Lint</strong></td><td><span class="tag t-cond">Configurable</span></td>
+      <td class="mono">android-lint-format</td><td class="no">Self-heal</td>
+      <td class="yes">‖ Test</td><td>always / never / per-task</td><td class="fbc">→ Code Gen (unfixable)</td>
+    </tr>
+    <tr>
+      <td><strong>Build</strong></td><td><span class="tag t-cond">Configurable</span></td>
+      <td class="mono">android-build</td><td><span class="tag t-sub">Signing</span></td>
+      <td class="no">No</td><td>always / never / per-task</td><td class="fbc">→ Code Gen, ← Deploy</td>
+    </tr>
+    <tr>
+      <td><strong>Deploy</strong></td><td><span class="tag t-cond">Configurable</span></td>
+      <td class="mono">android-deploy</td><td class="no">None</td>
+      <td class="no">No</td><td>always / never / per-task</td><td class="fbc">→ Build</td>
+    </tr>
+    <tr>
+      <td><strong>Git</strong></td><td><span class="tag t-a">Agent</span></td>
+      <td class="mono">git-workflow <span class="tag t-mcp">code-mcp</span></td><td class="no">None</td>
+      <td class="no">No</td><td>After quality/deploy</td><td class="fbc">Creates PR → ⏸ human reviews + merges</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- NOTES                                                   -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="notes">
+  <h4>Architecture Principles</h4>
+  <p><strong>Bootstrap runs once, configures everything.</strong> Before any task enters the pipeline, Bootstrap detects context, discovers available MCPs, assesses spec quality, and checks project state. It outputs a <code style="color:#00d2b4">pipeline-config.json</code> that every downstream agent reads. No hardcoded assumptions about what tools you use or what kind of project this is.</p>
+  <p><strong>Context is flexible, not binary.</strong> Work, personal, freelance, open source, hackathon, team of two — Bootstrap doesn't force you into a box. It auto-detects what it can and asks short targeted questions for the rest. Answers are saved to <code style="color:#00d2b4">.pipeline.yml</code> so it doesn't re-ask. The key thing it derives: how much product thinking does the pipeline need to do for you?</p>
+  <p><strong>MCP connectors are discovered, not hardcoded.</strong> The pipeline doesn't care which specific tools you use. Bootstrap scans for available MCPs and their capabilities. If you switch task trackers or design tools tomorrow, nothing in the pipeline changes — Bootstrap re-discovers on next run.</p>
+  <p><strong>Coordinator is a router, not a brain.</strong> It classifies task type, routes to the right agent, and forwards failure reports. It reads the Bootstrap config to know what's available. No planning, no state management beyond "which stage are we in."</p>
+  <p><strong>Product Agent exists for the solo dev.</strong> A one-person developer doesn't have a PM. This agent thinks at the product level: what screens, what API contracts, what edge cases, what order to build things. At work, it's a safety net for under-specced tickets. For personal projects, it's always on.</p>
+  <p><strong>Spec quality is assessed per-task too.</strong> Bootstrap sets the default, but the Coordinator also checks each incoming task. A well-specced ticket in a "personal" context can still skip Product Agent. A vague one-liner in a "work" context still gets the Product Agent treatment. The system is flexible, not rigid.</p>
+  <p><strong>Pipeline Memory is the institutional brain.</strong> Every agent reads before acting and writes after completing. Decisions, learnings, mistakes, and code patterns are all persisted locally in <code style="color:#dd88ff">.pipeline/memory/</code>. The pipeline gets smarter with every run — Run 3 avoids the mistakes from Run 1 because the memory carries forward. Can be committed to git for team-shared learning or gitignored for personal use.</p>
+  <p><strong>Not every task hits every agent.</strong> Bug fixes skip Product Agent and go straight to Code Gen. Releases skip everything and go to Build → Deploy → Git. The task type routing table (9 paths) ensures no wasted work.</p>
+  <p><strong>Sprint batches run in parallel.</strong> When the Product Agent identifies independent tasks in a batch, they each get their own Code Gen team as a sub-agent. The Coordinator manages the dependency DAG — parallel where possible, sequential where required.</p>
+  <p><strong>Humans review before code merges.</strong> The pipeline creates branches, commits, and opens PRs — but stops short of merging. The developer reviews the diff, test results, and any notes, then merges manually. This is the second human checkpoint (after the Product Agent review gate). Auto-merge is available but off by default.</p>
+  <p><strong>Agents document their decisions.</strong> The Architect writes ADRs (Architecture Decision Records) explaining structural choices. The Product Agent writes Product Spec Records capturing requirements and decomposition rationale. Both are persisted as files and indexed into Pipeline Memory, creating a searchable history of why things were built the way they were.</p>
+</div>
+
+</body>
+</html>
