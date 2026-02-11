@@ -1,81 +1,194 @@
-# Mobile Agentic Pipeline
+<h1 align="center">
+  🚀 Mobile Agentic Pipeline
+</h1>
 
-AI-assisted development pipeline for iOS and Android — from idea to committed code, powered by Claude Code skills.
+<p align="center">
+  <strong>Describe a feature. Get a PR.</strong><br/>
+  AI-powered iOS & Android development — from idea to merge, with you in the loop.
+</p>
 
-You describe what you want. The pipeline writes a spec, gets your approval, generates Clean Architecture code, tests it, and opens a PR. Two human checkpoints keep you in control.
+<p align="center">
+  <img src="https://img.shields.io/badge/iOS-Swift_%7C_SwiftUI-F05138?style=for-the-badge&logo=swift&logoColor=white" alt="iOS">
+  <img src="https://img.shields.io/badge/Android-Kotlin_%7C_Compose-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white" alt="Android">
+  <img src="https://img.shields.io/badge/Powered_by-Claude_Code-D97706?style=for-the-badge&logo=anthropic&logoColor=white" alt="Claude Code">
+  <img src="https://img.shields.io/badge/License-MIT-22C55E?style=for-the-badge" alt="MIT License">
+</p>
 
-**[Usage Guide](docs/usage-guide.md)** — all examples, single-agent scenarios, invocation methods, configuration.
+<p align="center">
+  <a href="docs/usage-guide.md"><strong>📖 Usage Guide</strong></a> &nbsp;·&nbsp;
+  <a href="docs/battle-testing.md"><strong>🧪 Battle Testing</strong></a> &nbsp;·&nbsp;
+  <a href="#-architecture"><strong>🏗️ Architecture</strong></a>
+</p>
 
-## Architecture
+---
 
-Interactive diagrams — click to view:
+## ✨ What This Does
 
-| Platform | Full | Lite |
-|----------|------|------|
-| **iOS** (Swift, SwiftUI, MVVM-C) | [View](https://sreedeepkesav.github.io/mobile-agentic-pipeline/ios/full-pipeline.html) | [View](https://sreedeepkesav.github.io/mobile-agentic-pipeline/ios/lite-pipeline.html) |
-| **Android** (Kotlin, Compose, MVVM) | [View](https://sreedeepkesav.github.io/mobile-agentic-pipeline/android/full-pipeline.html) | [View](https://sreedeepkesav.github.io/mobile-agentic-pipeline/android/lite-pipeline.html) |
+You tell Claude Code what you want. A team of **5 AI agents** handles the rest.
 
-## Install
+```
+You:  "Use ios-builder to add a dark mode toggle in Settings."
 
-Install into your **project** so the pipeline learns your codebase — APIs, patterns, conventions, dependencies — and gets smarter with every run.
+  📋  Spec — screens, edge cases, API contracts
+  ⏸   You approve
+  🧠  5-agent Code Gen team → 4 phases of Clean Architecture code
+  ✅  Tests + Lint + Build
+  🔀  PR with conventional commits
+  ⏸   You review and merge
+```
+
+**Two human checkpoints. Zero surprises. Production-grade code.**
+
+---
+
+## ⚡ Quick Start
+
+**1.** Clone and install into your project:
 
 ```bash
-cd your-project
+git clone https://github.com/sreedeepkesav/mobile-agentic-pipeline.git
+cd your-ios-or-android-project
 mkdir -p .claude/skills
 
-# Pick your platform + variant:
-cp -r path/to/skills/ios-builder .claude/skills/ios-builder            # iOS
-cp -r path/to/skills/ios-builder-lite .claude/skills/ios-builder-lite  # iOS, lightweight
-cp -r path/to/skills/android-builder .claude/skills/android-builder            # Android
-cp -r path/to/skills/android-builder-lite .claude/skills/android-builder-lite  # Android, lightweight
+# Pick one:
+cp -r path/to/mobile-agentic-pipeline/skills/ios-builder .claude/skills/ios-builder
+cp -r path/to/mobile-agentic-pipeline/skills/android-builder .claude/skills/android-builder
 ```
 
-Project-level install is recommended. The Full variants build a **Project Context** — a living snapshot of your APIs, design system, dependencies, and domain model — that persists in `.pipeline/memory/` and compounds across runs. Global install (`~/.claude/skills/`) works but won't retain project-specific context.
+> 💡 **Install per-project.** The pipeline builds a **Project Context** — it learns your APIs, design system, dependencies, and domain model. This compounds across runs. By run 5, it knows your project deeply. Global install (`~/.claude/skills/`) works but won't retain project-specific learning.
 
-## Use
-
-Name the pipeline in your prompt:
+**2.** Use it:
 
 ```
-Use ios-builder to add a dark mode toggle in Settings.
+Use ios-builder to add user authentication with email and password.
 ```
 
-The pipeline runs end-to-end:
+That's it. The pipeline takes it from here.
+
+---
+
+## 🧩 You Don't Have to Run Everything
+
+Use the full pipeline, or just the parts you need:
 
 ```
-Spec → ⏸ You approve → Code (4-phase team) → Test + Lint → Build → PR → ⏸ You merge
+💬  "Use ios-builder — just spec out the payment flow, no code yet."
+💬  "Use android-builder — run tests only, report coverage."
+💬  "Use ios-builder — build and ship to TestFlight."
+💬  "Use android-builder — just lint the codebase."
+💬  "Use ios-builder — create a PR for my current changes."
 ```
 
-You don't have to run everything. Ask for just the parts you need:
+Mix and match. **[See all scenarios →](docs/usage-guide.md)**
+
+---
+
+## 📦 4 Variants
+
+<table>
+  <tr>
+    <td></td>
+    <td align="center"><strong>🍎 iOS</strong></td>
+    <td align="center"><strong>🤖 Android</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Builder</strong></td>
+    <td align="center"><code>ios-builder</code></td>
+    <td align="center"><code>android-builder</code></td>
+  </tr>
+  <tr>
+    <td><strong>Builder Lite</strong></td>
+    <td align="center"><code>ios-builder-lite</code></td>
+    <td align="center"><code>android-builder-lite</code></td>
+  </tr>
+</table>
+
+### 🏗️ Builder (Full)
+
+For projects that need structure. Bootstrap auto-configures your environment. Coordinator intelligently routes tasks — bugs skip the spec phase, releases skip code gen, sprint batches run in parallel. **Pipeline Memory** learns your patterns, mistakes, and conventions. Configurable stages let you skip tests, skip deploy, or run just one agent.
+
+### ⚡ Builder Lite
+
+For speed. No config, no memory, no bootstrap. Describe what you want, approve the spec, get a PR. Same 5-agent Code Gen team, same Clean Architecture output — just a simpler process.
+
+> **How to choose**: It's about your *process*, not the task's complexity. A timer app might use Builder (you want tests + deploy + memory). A complex feature might use Lite (you're prototyping fast).
+
+---
+
+## 🧠 The Pipeline Learns Your Project
+
+Builder variants build a **Project Context** that grows automatically:
 
 ```
-Use ios-builder — just spec out the payment flow, no code yet.
-Use android-builder — run tests only.
-Use ios-builder — build and ship to TestFlight.
+🔵 Run 1   Cold start. Full exploration.
+🟡 Run 3   Knows your APIs, components, and patterns.
+🟢 Run 5+  Applies established patterns instantly. Reuses your components.
+            Follows your naming conventions. Avoids past mistakes.
 ```
 
-See the [full usage guide](docs/usage-guide.md) for all scenarios, single-agent usage, invocation methods, and configuration options.
+**What it tracks**: API endpoints & auth patterns · design system components · dependencies & versions · module structure · team conventions · domain entities & business rules.
 
-## Full vs Lite
+This isn't configuration — it's automatic. The pipeline discovers your project as it works on it.
 
-| Full | Lite |
-|------|------|
-| Bootstrap auto-configures your environment | Zero config, just start |
-| Coordinator routes bugs/features/refactors differently | Single flow for everything |
-| Pipeline Memory + Project Context learns across runs | No memory |
-| Configurable stages (skip test, skip deploy) | All stages always run |
-| Sprint batch (parallel task execution) | One task at a time |
-| Single-agent runs (just test, just lint, just deploy) | Always end-to-end |
+---
 
-Both use the same 4-phase Code Gen team and produce the same quality code.
+<a name="-architecture"></a>
+## 🏗️ Architecture
 
-## Roadmap
+**Interactive diagrams** — click to explore the full pipeline flow:
 
-- [x] Architecture diagrams
-- [x] Claude Code skills (iOS Full + Lite, Android Full + Lite)
-- [x] Project Context (project brain — APIs, design system, dependencies, domain model)
-- [ ] KMP shared module support
+<table>
+  <tr>
+    <td></td>
+    <td align="center"><strong>Builder</strong></td>
+    <td align="center"><strong>Builder Lite</strong></td>
+  </tr>
+  <tr>
+    <td>🍎 <strong>iOS</strong> — Swift · SwiftUI · MVVM-C</td>
+    <td align="center"><a href="https://sreedeepkesav.github.io/mobile-agentic-pipeline/ios/full-pipeline.html">🔗 View</a></td>
+    <td align="center"><a href="https://sreedeepkesav.github.io/mobile-agentic-pipeline/ios/lite-pipeline.html">🔗 View</a></td>
+  </tr>
+  <tr>
+    <td>🤖 <strong>Android</strong> — Kotlin · Compose · MVVM</td>
+    <td align="center"><a href="https://sreedeepkesav.github.io/mobile-agentic-pipeline/android/full-pipeline.html">🔗 View</a></td>
+    <td align="center"><a href="https://sreedeepkesav.github.io/mobile-agentic-pipeline/android/lite-pipeline.html">🔗 View</a></td>
+  </tr>
+</table>
 
-## License
+### Code Gen Team — 5 Agents, 4 Phases
 
-MIT
+```
+Phase 1  🏛️  Architect (Principal)     Blueprint, ADR, file plan — no code yet
+Phase 2  🧬  Domain Lead (Senior)      Entities, use cases — pure business logic
+Phase 3  📡  Data Lead ‖ 🎨 Pres Lead  Parallel: API/DB layer ↔ UI/ViewModel layer
+Phase 4  🔧  Integration (Staff)       DI wiring, layer audit, conformance check
+```
+
+**Hard rule**: Domain layer has zero framework imports. Pure Swift / pure Kotlin only.
+
+### Platform Standards
+
+| | 🍎 iOS | 🤖 Android |
+|-|--------|-----------|
+| **UI** | SwiftUI | Jetpack Compose |
+| **Architecture** | MVVM-C + Clean | MVVM + Clean |
+| **DI** | Protocol-driven (manual) | Hilt |
+| **Navigation** | Coordinators + NavigationPath | Navigation Compose |
+| **State** | @Published + ViewState enums | StateFlow + UiState sealed |
+| **Testing** | XCTest + XCUITest | JUnit5 + MockK + Espresso |
+| **Lint** | SwiftLint + SwiftFormat | ktlint + detekt |
+
+---
+
+## 🗺️ Roadmap
+
+- [x] 📐 Interactive architecture diagrams
+- [x] 🛠️ Claude Code skills — iOS + Android, Builder + Lite
+- [x] 🧠 Project Context — auto-learning project brain
+- [ ] 🔄 KMP shared module support
+
+---
+
+<p align="center">
+  <strong>MIT License</strong> · Built with ❤️ and Claude Code
+</p>
