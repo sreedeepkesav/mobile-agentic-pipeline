@@ -196,15 +196,18 @@ For branching strategy, commit format, PR templates: see `references/git-workflo
 
 Pipeline Memory is always active in the Full pipeline. It captures what the pipeline learns across runs so agents don't repeat mistakes and stay consistent with established patterns.
 
-**4 Categories Stored:**
+**5 Dimensions Stored:**
 - **Decisions**: "Data layer uses Retrofit + Kotlinx.serialization"
 - **Learnings**: "This codebase uses single-module structure"
 - **Mistakes + Corrections**: "DTO without @Serializable → build failed → added rule"
 - **Patterns**: "Every ViewModel uses @HiltViewModel + StateFlow + viewModelScope"
+- **Project Context**: API endpoints, design system, dependencies, module map, domain model, team conventions
 
 **Every agent writes** to memory after acting. **Every agent reads** from memory before acting.
 
-**Storage**: `.pipeline/memory/` — append-only log, indexed for fast queries. Agents query with context: `memory.query("networking patterns")` or `memory.mistakes("Data layer")`.
+**Storage**: `.pipeline/memory/` — append-only log + project context registries. Agents query execution memory (`memory.query("networking patterns")`) and project context (`context.api("user endpoints")`, `context.components("button")`, `context.entity("User")`).
+
+**Project Context auto-populates** on bootstrap by scanning your project (build.gradle.kts, Kotlin files, folders), then grows richer with every pipeline run. By run 5, the pipeline knows your project deeply — APIs, Composables, entities, Hilt modules, conventions — and uses that knowledge to avoid duplicates, follow patterns, and make smarter decisions.
 
 For full memory schema, querying, and agent read/write details: see `references/pipeline-memory.md`
 

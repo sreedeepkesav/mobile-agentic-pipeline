@@ -6,6 +6,15 @@ You describe what you want. The pipeline writes a spec, gets your approval, gene
 
 **[Usage Guide](docs/usage-guide.md)** — all examples, single-agent scenarios, invocation methods, configuration.
 
+## Architecture
+
+Interactive diagrams — click to view:
+
+| Platform | Full | Lite |
+|----------|------|------|
+| **iOS** (Swift, SwiftUI, MVVM-C) | [View](https://sreedeepkesav.github.io/mobile-agentic-pipeline/ios/full-pipeline.html) | [View](https://sreedeepkesav.github.io/mobile-agentic-pipeline/ios/lite-pipeline.html) |
+| **Android** (Kotlin, Compose, MVVM) | [View](https://sreedeepkesav.github.io/mobile-agentic-pipeline/android/full-pipeline.html) | [View](https://sreedeepkesav.github.io/mobile-agentic-pipeline/android/lite-pipeline.html) |
+
 ## Install
 
 ```bash
@@ -46,27 +55,18 @@ See the [full usage guide](docs/usage-guide.md) for all scenarios, single-agent 
 |------|------|
 | Bootstrap auto-configures your environment | Zero config, just start |
 | Coordinator routes bugs/features/refactors differently | Single flow for everything |
-| Pipeline Memory learns across runs | No memory |
+| Pipeline Memory + Project Context learns across runs | No memory |
 | Configurable stages (skip test, skip deploy) | All stages always run |
 | Sprint batch (parallel task execution) | One task at a time |
 | Single-agent runs (just test, just lint, just deploy) | Always end-to-end |
 
 Both use the same 4-phase Code Gen team and produce the same quality code.
 
-## Architecture
-
-Interactive diagrams — click to view:
-
-| Platform | Full | Lite |
-|----------|------|------|
-| **iOS** (Swift, SwiftUI, MVVM-C) | [View](https://sreedeepkesav.github.io/mobile-agentic-pipeline/ios/full-pipeline.html) | [View](https://sreedeepkesav.github.io/mobile-agentic-pipeline/ios/lite-pipeline.html) |
-| **Android** (Kotlin, Compose, MVVM) | [View](https://sreedeepkesav.github.io/mobile-agentic-pipeline/android/full-pipeline.html) | [View](https://sreedeepkesav.github.io/mobile-agentic-pipeline/android/lite-pipeline.html) |
-
 ## Roadmap
 
 - [x] Architecture diagrams
 - [x] Claude Code skills (iOS Full + Lite, Android Full + Lite)
-- [ ] Standalone CLI
+- [x] Project Context (project brain — APIs, design system, dependencies, domain model)
 - [ ] KMP shared module support
 
 ## License

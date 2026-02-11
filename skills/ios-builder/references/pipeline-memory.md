@@ -378,6 +378,286 @@ class MockDependencyContainer: DependencyContainer {
 - Internal: docs/architecture/dependency-injection.md
 ```
 
+## Project Context (Project Brain)
+
+Beyond execution memory (decisions, learnings, mistakes, patterns), Pipeline Memory also maintains a **Project Context** — a living snapshot of the project itself. This context grows automatically as the pipeline works on the project and agents discover its shape.
+
+### Storage
+
+```
+.pipeline/memory/
+└─ context/
+   ├─ api-registry.json       # Known endpoints, auth patterns, response shapes
+   ├─ design-system.json      # Components, tokens, theme conventions
+   ├─ dependency-registry.json # Libraries, versions, rationale
+   ├─ module-map.json          # App modules, ownership, relationships
+   ├─ conventions.json         # Team naming, code style, PR process
+   └─ domain-model.json       # Entities, relationships, business glossary
+```
+
+### API Registry
+
+Tracks every API endpoint the pipeline discovers or creates.
+
+```json
+{
+  "base_url": "https://api.myapp.com/v2",
+  "auth": {
+    "type": "bearer_jwt",
+    "token_endpoint": "/auth/token",
+    "refresh_endpoint": "/auth/refresh",
+    "header": "Authorization: Bearer {token}"
+  },
+  "endpoints": [
+    {
+      "path": "/users/{id}",
+      "method": "GET",
+      "request": null,
+      "response": "UserDTO",
+      "auth_required": true,
+      "added_by_feature": "user-profile",
+      "date_added": "2024-01-15"
+    },
+    {
+      "path": "/posts",
+      "method": "POST",
+      "request": "CreatePostRequest",
+      "response": "PostDTO",
+      "auth_required": true,
+      "added_by_feature": "create-post",
+      "date_added": "2024-01-17"
+    }
+  ]
+}
+```
+
+**How agents use it:**
+- **Product Agent**: Checks existing endpoints before proposing new ones (avoids duplicates)
+- **Data Lead**: Knows the auth pattern, base URL, and existing DTOs
+- **Architect**: Sees the full API surface when planning new features
+
+### Design System Registry
+
+Captures the project's design language as it evolves.
+
+```json
+{
+  "theme": {
+    "primary": "#007AFF",
+    "secondary": "#5856D6",
+    "background": "#F2F2F7",
+    "surface": "#FFFFFF",
+    "error": "#FF3B30",
+    "typography": {
+      "title": "SF Pro Display, 28pt, Bold",
+      "body": "SF Pro Text, 17pt, Regular",
+      "caption": "SF Pro Text, 13pt, Regular"
+    },
+    "spacing": { "xs": 4, "sm": 8, "md": 16, "lg": 24, "xl": 32 }
+  },
+  "components": [
+    {
+      "name": "PrimaryButton",
+      "file": "Presentation/Components/PrimaryButton.swift",
+      "props": ["title: String", "action: () -> Void", "isLoading: Bool"],
+      "usage_count": 8
+    },
+    {
+      "name": "ErrorBanner",
+      "file": "Presentation/Components/ErrorBanner.swift",
+      "props": ["message: String", "retryAction: (() -> Void)?"],
+      "usage_count": 5
+    }
+  ],
+  "conventions": {
+    "loading_state": "ProgressView() centered in container",
+    "empty_state": "VStack with illustration + message + CTA button",
+    "error_state": "ErrorBanner at top + retry button"
+  }
+}
+```
+
+**How agents use it:**
+- **Presentation Lead**: Reuses existing components instead of creating duplicates
+- **Product Agent**: References established UI patterns when writing specs
+- **Architect**: Knows the component library size when estimating effort
+
+### Dependency Registry
+
+Tracks all third-party dependencies and why they were chosen.
+
+```json
+{
+  "package_manager": "spm",
+  "dependencies": [
+    {
+      "name": "Alamofire",
+      "version": "5.8.0",
+      "purpose": "HTTP networking",
+      "rationale": "Simpler than raw URLSession for complex request chains",
+      "layer": "data",
+      "added_by_feature": "initial-setup",
+      "date_added": "2024-01-10"
+    },
+    {
+      "name": "KeychainAccess",
+      "version": "4.2.2",
+      "purpose": "Secure token storage",
+      "rationale": "Type-safe Keychain wrapper, avoids raw SecItem APIs",
+      "layer": "data",
+      "added_by_feature": "auth",
+      "date_added": "2024-01-15"
+    }
+  ]
+}
+```
+
+**How agents use it:**
+- **Architect**: Knows what's available before proposing new libraries
+- **Data Lead**: Uses existing networking/storage dependencies instead of adding alternatives
+- **Integration**: Verifies no duplicate or conflicting dependencies
+
+### Module Map
+
+Captures how the app is organized — what owns what.
+
+```json
+{
+  "modules": [
+    {
+      "name": "Auth",
+      "type": "feature",
+      "layers": ["domain", "data", "presentation"],
+      "entities": ["User", "AuthToken", "Session"],
+      "screens": ["LoginScreen", "RegisterScreen", "ForgotPasswordScreen"],
+      "dependencies": ["Networking", "Storage"],
+      "owner": "auth-team"
+    },
+    {
+      "name": "Networking",
+      "type": "infrastructure",
+      "layers": ["data"],
+      "provides": ["APIClient", "TokenInterceptor", "NetworkMonitor"],
+      "used_by": ["Auth", "Posts", "Profile"]
+    }
+  ],
+  "shared_modules": [
+    {
+      "name": "DesignSystem",
+      "type": "ui-kit",
+      "components": 12,
+      "used_by": ["Auth", "Posts", "Profile", "Settings"]
+    }
+  ]
+}
+```
+
+**How agents use it:**
+- **Coordinator**: Knows which module a task belongs to
+- **Architect**: Sees module dependencies before adding cross-module calls
+- **Product Agent**: Understands existing feature boundaries
+
+### Team Conventions
+
+Captures naming, formatting, and process conventions as they emerge.
+
+```json
+{
+  "naming": {
+    "branches": "feature/{ticket-id}-{short-description}",
+    "commits": "conventional: feat:, fix:, refactor:, test:, docs:",
+    "files": {
+      "views": "{Feature}View.swift",
+      "viewmodels": "{Feature}ViewModel.swift",
+      "coordinators": "{Feature}Coordinator.swift",
+      "use_cases": "{Action}{Entity}UseCase.swift",
+      "repositories": "{Entity}Repository.swift",
+      "dtos": "{Entity}DTO.swift"
+    }
+  },
+  "code_style": {
+    "access_control": "explicit (internal is written, not inferred)",
+    "optionals": "guard-let preferred over if-let for early exit",
+    "closures": "trailing closure syntax for single-closure params",
+    "async": "async/await preferred over Combine"
+  },
+  "process": {
+    "pr_size": "max 400 lines changed",
+    "review_required": true,
+    "ci_must_pass": true,
+    "squash_on_merge": true
+  }
+}
+```
+
+**How agents use it:**
+- **All agents**: Follow established naming and style from first line of code
+- **Git Agent**: Uses the branch naming and commit conventions
+- **Integration**: Validates conformance to code style conventions
+
+### Domain Model
+
+Captures the business domain — entities, relationships, and a glossary of terms.
+
+```json
+{
+  "entities": [
+    {
+      "name": "User",
+      "fields": ["id: UUID", "name: String", "email: String", "avatarURL: URL?"],
+      "relationships": ["has many Posts", "has one Session"],
+      "business_rules": ["Email must be unique", "Name 2-50 chars"]
+    },
+    {
+      "name": "Post",
+      "fields": ["id: UUID", "title: String", "body: String", "authorId: UUID", "createdAt: Date"],
+      "relationships": ["belongs to User", "has many Comments"],
+      "business_rules": ["Title required, max 200 chars", "Body required, max 5000 chars"]
+    }
+  ],
+  "glossary": {
+    "Session": "Active authentication state with JWT token and refresh token",
+    "Draft": "Unsaved post stored locally in UserDefaults until published"
+  }
+}
+```
+
+**How agents use it:**
+- **Product Agent**: References existing entities when decomposing features
+- **Domain Lead**: Reuses existing entities, avoids creating duplicates
+- **Data Lead**: Knows entity relationships for API contract design
+
+### Context Auto-Population
+
+Project Context is populated **automatically** — you don't configure it manually.
+
+**On bootstrap (first run):**
+- Scans `Package.swift` or `Podfile` → populates dependency registry
+- Scans project folders → populates module map
+- Scans Swift files for entity definitions → populates domain model
+- Detects Xcode settings → populates conventions
+
+**During each run:**
+- Product Agent adds new entities to domain model
+- Data Lead adds new endpoints to API registry
+- Presentation Lead registers new components in design system
+- Integration updates module dependencies
+
+**Progressive enrichment:** Context starts sparse and gets richer with every pipeline run. By run 5, the pipeline knows your project deeply.
+
+### Context Queries
+
+Agents query project context the same way they query execution memory:
+
+```
+context.api("user endpoints")         → all /users/* endpoints
+context.components("button")          → PrimaryButton, SecondaryButton
+context.module("Auth")                → full Auth module info
+context.entity("User")               → User fields, relationships, rules
+context.dependency("networking")      → Alamofire details
+context.convention("branch naming")   → feature/{ticket-id}-{desc}
+```
+
 ## Agent Contributions
 
 ### What Each Agent Writes and Reads
@@ -385,46 +665,57 @@ class MockDependencyContainer: DependencyContainer {
 **Bootstrap Agent**
 - Writes: Project context, detected architecture, MCP capabilities
 - Reads: (Initial run only; no prior memory)
+- Context: Writes module-map, dependency-registry, domain-model on first run
 
 **Product Agent**
 - Writes: Feature specs, decomposition rationale, design maps
 - Reads: Learnings (design patterns), patterns (UX conventions)
+- Context: Reads context.entity() before proposing new domain objects; writes new entities to domain-model
 
 **Architect**
 - Writes: Blueprint decisions, ADRs, architectural patterns
 - Reads: Prior decisions (architecture consistency), mistakes (avoid repeating)
+- Context: Reads context.module() and context.dependency() when planning features; validates module dependencies
 
 **Domain Lead**
 - Writes: Domain entity patterns, use case structure
 - Reads: Learnings (domain modeling), patterns (error handling)
+- Context: Reads context.entity() to avoid duplicates; writes new entities and relationships to domain-model
 
 **Data Lead**
 - Writes: API integration patterns, storage strategies, mapper conventions
 - Reads: Learnings (API design), patterns (repository implementation), mistakes (integration bugs)
+- Context: Reads context.api() for existing endpoints; writes new endpoints and auth patterns to api-registry
 
 **Presentation Lead**
 - Writes: ViewModel patterns, SwiftUI component structures, navigation flows
 - Reads: Learnings (state management), patterns (ViewModel structure), mistakes (SwiftUI pitfalls)
+- Context: Reads context.components() to reuse existing UI; writes new components to design-system
 
 **Integration (Staff)**
 - Writes: DI decisions, layer separation audits, conformance patterns
 - Reads: Decisions (architecture), patterns (DI assembly), mistakes (circular dependencies)
+- Context: Reads context.module() and context.dependency() for wiring; updates module-map dependencies
 
 **Test Agent**
 - Writes: Test patterns, mock strategies, coverage insights
 - Reads: Patterns (mock setup), learnings (testability patterns)
+- Context: Reads context.api() and context.module() for test scope
 
 **Lint Agent**
 - Writes: Violation patterns, auto-fix strategies, architectural violations
 - Reads: Patterns (layer separation), mistakes (common violations)
+- Context: Reads context.convention() and context.module() to validate code style and architecture
 
 **Build/Deploy Agent**
 - Writes: Build configuration patterns, signing, deployment strategies
 - Reads: Learnings (build optimization), mistakes (versioning errors)
+- Context: Reads context.dependency() for version resolution
 
 **Coordinator**
 - Writes: Routing decisions, feedback loop resolutions, task classification learnings
 - Reads: Decisions (major routing), patterns (task types)
+- Context: Reads context.module() to route tasks to correct feature owners
 
 ## Querying Memory
 

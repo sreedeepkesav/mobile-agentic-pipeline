@@ -201,15 +201,18 @@ For branching strategy, commit format, PR templates: see `references/git-workflo
 
 Pipeline Memory is always active in the Full pipeline. It captures what the pipeline learns across runs so agents don't repeat mistakes and stay consistent with established patterns.
 
-**4 Categories Stored:**
+**5 Dimensions Stored:**
 - **Decisions**: "Architect chose repository pattern for networking"
 - **Learnings**: "This codebase uses custom DI container (not Swinject)"
 - **Mistakes + Corrections**: "DTO without Codable → build failed → added Codable rule"
 - **Patterns**: "Every ViewModel uses init(useCase:) + @Published + async load()"
+- **Project Context**: API endpoints, design system, dependencies, module map, domain model, team conventions
 
 **Every agent writes** to memory after acting. **Every agent reads** from memory before acting.
 
-**Storage**: `.pipeline/memory/` — append-only log, indexed for fast queries. Agents query with context: `memory.query("networking patterns")` or `memory.mistakes("Domain layer")`.
+**Storage**: `.pipeline/memory/` — append-only log + project context registries. Agents query execution memory (`memory.query("networking patterns")`) and project context (`context.api("user endpoints")`, `context.components("button")`, `context.entity("User")`).
+
+**Project Context auto-populates** on bootstrap by scanning your project, then grows richer with every pipeline run. By run 5, the pipeline knows your project deeply — APIs, components, entities, conventions — and uses that knowledge to avoid duplicates, follow patterns, and make smarter decisions.
 
 **Example across 3 runs:**
 1. Run 1: DTO missing Codable → build fails → memory records prevention rule

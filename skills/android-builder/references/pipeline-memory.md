@@ -311,6 +311,14 @@ Bootstrap displays:
   • Hilt: @Module + @InstallIn(SingletonComponent), @Binds for repos, @Singleton scope
   • Domain: zero Android imports (Kotlin only)
 
+✓ Project Context loaded:
+  - 12 API endpoints across 3 Retrofit services
+  - 8 reusable Composables in DesignSystem
+  - 14 Gradle dependencies tracked
+  - 4 feature modules + 2 infrastructure modules
+  - 6 domain entities with relationships
+  - Naming conventions established
+
 These patterns will guide Code Gen Team for consistency.
 ```
 
@@ -481,3 +489,293 @@ Presentation tests: 60%+ coverage (ViewModel state, Compose screens)"
 - Consolidate patterns: merge similar patterns into one
 - Deprecate low-frequency patterns (frequency = 1 for 10+ runs)
 - Archive to `pipeline_memory_archive.json` for historical reference
+
+---
+
+## Project Context (Project Brain)
+
+Beyond execution memory (patterns, error resolutions, naming conventions), Pipeline Memory also maintains a **Project Context** — a living snapshot of the project itself. This context grows automatically as the pipeline works on the project.
+
+### Storage
+
+Project context is stored alongside `pipeline_memory.json`:
+
+```
+project_context/
+├── api-registry.json       # Known endpoints, auth patterns, response shapes
+├── design-system.json      # Compose components, Material 3 tokens, theme
+├── dependency-registry.json # Libraries, versions, rationale
+├── module-map.json          # App modules, ownership, relationships
+├── conventions.json         # Team naming, code style, PR process
+└── domain-model.json        # Entities, relationships, business glossary
+```
+
+### API Registry
+
+Tracks every API endpoint the pipeline discovers or creates.
+
+```json
+{
+  "base_url": "https://api.myapp.com/v2",
+  "auth": {
+    "type": "bearer_jwt",
+    "token_endpoint": "/auth/token",
+    "refresh_endpoint": "/auth/refresh",
+    "header": "Authorization: Bearer {token}"
+  },
+  "endpoints": [
+    {
+      "path": "/users/{id}",
+      "method": "GET",
+      "request": null,
+      "response": "UserDto",
+      "auth_required": true,
+      "retrofit_service": "UserService",
+      "added_by_feature": "user-profile",
+      "date_added": "2025-02-10"
+    },
+    {
+      "path": "/posts",
+      "method": "POST",
+      "request": "CreatePostRequest",
+      "response": "PostDto",
+      "auth_required": true,
+      "retrofit_service": "PostService",
+      "added_by_feature": "create-post",
+      "date_added": "2025-02-12"
+    }
+  ]
+}
+```
+
+**How agents use it:**
+- **Product Agent**: Checks existing endpoints before proposing new ones
+- **Data Lead**: Knows the auth pattern, base URL, existing Retrofit services and DTOs
+- **Architect**: Sees the full API surface when planning new features
+
+### Design System Registry
+
+Captures the project's Material Design 3 language as it evolves.
+
+```json
+{
+  "theme": {
+    "color_scheme": "dynamic_color_with_fallback",
+    "primary": "#6750A4",
+    "secondary": "#625B71",
+    "surface": "#FFFBFE",
+    "error": "#B3261E",
+    "typography": {
+      "displayLarge": "Roboto, 57sp",
+      "headlineMedium": "Roboto, 28sp",
+      "bodyLarge": "Roboto, 16sp",
+      "labelSmall": "Roboto, 11sp"
+    },
+    "spacing": { "xs": "4.dp", "sm": "8.dp", "md": "16.dp", "lg": "24.dp", "xl": "32.dp" }
+  },
+  "components": [
+    {
+      "name": "PrimaryButton",
+      "file": "presentation/components/PrimaryButton.kt",
+      "composable": true,
+      "params": ["text: String", "onClick: () -> Unit", "isLoading: Boolean = false"],
+      "usage_count": 8
+    },
+    {
+      "name": "ErrorBanner",
+      "file": "presentation/components/ErrorBanner.kt",
+      "composable": true,
+      "params": ["message: String", "onRetry: (() -> Unit)? = null"],
+      "usage_count": 5
+    }
+  ],
+  "conventions": {
+    "loading_state": "CircularProgressIndicator() centered in Box(fillMaxSize)",
+    "empty_state": "Column with illustration + message + Button",
+    "error_state": "ErrorBanner at top + retry button"
+  }
+}
+```
+
+**How agents use it:**
+- **Presentation Lead**: Reuses existing Composables instead of creating duplicates
+- **Product Agent**: References established UI patterns when writing specs
+- **Architect**: Knows the component library size when estimating effort
+
+### Dependency Registry
+
+Tracks all dependencies in `build.gradle.kts` and why they were chosen.
+
+```json
+{
+  "build_system": "gradle_kts",
+  "dependencies": [
+    {
+      "group": "com.squareup.retrofit2",
+      "artifact": "retrofit",
+      "version": "2.10.0",
+      "purpose": "HTTP networking",
+      "rationale": "Industry standard, coroutine-friendly, interceptor support",
+      "layer": "data",
+      "added_by_feature": "initial-setup"
+    },
+    {
+      "group": "com.google.dagger",
+      "artifact": "hilt-android",
+      "version": "2.51",
+      "purpose": "Dependency injection",
+      "rationale": "Android-standard DI, compile-time safety, ViewModel integration",
+      "layer": "di",
+      "added_by_feature": "initial-setup"
+    },
+    {
+      "group": "androidx.room",
+      "artifact": "room-runtime",
+      "version": "2.6.1",
+      "purpose": "Local database",
+      "rationale": "Type-safe SQL, Flow support, migration support",
+      "layer": "data",
+      "added_by_feature": "offline-cache"
+    }
+  ]
+}
+```
+
+**How agents use it:**
+- **Architect**: Knows what's available before proposing new libraries
+- **Data Lead**: Uses existing networking/storage deps instead of adding alternatives
+- **Integration**: Verifies no duplicate or conflicting dependencies in build.gradle.kts
+
+### Module Map
+
+Captures how the app is organized — features, infrastructure, shared modules.
+
+```json
+{
+  "modules": [
+    {
+      "name": "Auth",
+      "type": "feature",
+      "layers": ["domain", "data", "presentation"],
+      "entities": ["User", "AuthToken", "Session"],
+      "screens": ["LoginScreen", "RegisterScreen", "ForgotPasswordScreen"],
+      "hilt_modules": ["AuthModule", "AuthProvidersModule"],
+      "dependencies": ["Networking", "Storage"]
+    },
+    {
+      "name": "Networking",
+      "type": "infrastructure",
+      "layers": ["data"],
+      "provides": ["ApiClient", "TokenInterceptor", "NetworkMonitor"],
+      "hilt_modules": ["NetworkModule"],
+      "used_by": ["Auth", "Posts", "Profile"]
+    }
+  ],
+  "shared_modules": [
+    {
+      "name": "DesignSystem",
+      "type": "ui-kit",
+      "composables": 12,
+      "used_by": ["Auth", "Posts", "Profile", "Settings"]
+    }
+  ]
+}
+```
+
+**How agents use it:**
+- **Coordinator**: Knows which module a task belongs to
+- **Architect**: Sees module dependencies and Hilt module boundaries
+- **Product Agent**: Understands existing feature boundaries
+
+### Team Conventions
+
+Captures naming, formatting, and process conventions.
+
+```json
+{
+  "naming": {
+    "branches": "feature/{ticket-id}-{short-description}",
+    "commits": "conventional: feat:, fix:, refactor:, test:, docs:",
+    "files": {
+      "screens": "{Feature}Screen.kt",
+      "viewmodels": "{Feature}ViewModel.kt",
+      "use_cases": "{Action}{Entity}UseCase.kt",
+      "repositories": "{Entity}Repository.kt",
+      "repository_impls": "{Entity}RepositoryImpl.kt",
+      "dtos": "{Entity}Dto.kt",
+      "room_entities": "{Entity}Entity.kt",
+      "hilt_modules": "{Feature}Module.kt"
+    }
+  },
+  "code_style": {
+    "coroutines": "suspend functions preferred over callbacks",
+    "state": "StateFlow + UiState sealed class in every ViewModel",
+    "nullability": "avoid !! operator, use safe calls and elvis",
+    "compose": "stateless Composables, state hoisting to ViewModel"
+  },
+  "process": {
+    "pr_size": "max 400 lines changed",
+    "review_required": true,
+    "ci_must_pass": true,
+    "squash_on_merge": true
+  }
+}
+```
+
+### Domain Model
+
+Captures entities, relationships, and business terminology.
+
+```json
+{
+  "entities": [
+    {
+      "name": "User",
+      "fields": ["id: String", "name: String", "email: String", "avatarUrl: String?"],
+      "relationships": ["has many Posts", "has one Session"],
+      "business_rules": ["Email must be unique", "Name 2-50 chars"]
+    },
+    {
+      "name": "Post",
+      "fields": ["id: String", "title: String", "body: String", "authorId: String", "createdAt: Instant"],
+      "relationships": ["belongs to User", "has many Comments"],
+      "business_rules": ["Title required, max 200 chars", "Body required, max 5000 chars"]
+    }
+  ],
+  "glossary": {
+    "Session": "Active authentication state with JWT and refresh token",
+    "Draft": "Unpublished post stored in Room until user submits"
+  }
+}
+```
+
+### Context Auto-Population
+
+Project Context populates **automatically** — no manual configuration needed.
+
+**On bootstrap (first run):**
+- Scans `build.gradle.kts` → populates dependency registry
+- Scans project folders → populates module map
+- Scans Kotlin data classes → populates domain model
+- Detects Android Studio settings → populates conventions
+
+**During each run:**
+- Product Agent adds new entities to domain model
+- Data Lead adds new endpoints to API registry, new Room entities
+- Presentation Lead registers new Composables in design system
+- Integration updates module dependencies and Hilt module map
+
+**Progressive enrichment:** Context starts sparse and gets richer with every pipeline run. By run 5, the pipeline knows your project deeply.
+
+### Context Queries
+
+Agents query project context alongside execution memory:
+
+```
+context.api("user endpoints")         → all /users/* endpoints
+context.components("button")          → PrimaryButton, SecondaryButton
+context.module("Auth")                → full Auth module info
+context.entity("User")               → User fields, relationships, rules
+context.dependency("networking")      → Retrofit details
+context.convention("branch naming")   → feature/{ticket-id}-{desc}
+```
